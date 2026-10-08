@@ -20,7 +20,6 @@
                radial-gradient(ellipse at 88% 100%,#1a1330 0%,transparent 55%),var(--bg);
     color:var(--text); padding:8px; display:flex; flex-direction:column; }
 
-  /* ================= DESKTOP HEADER ================= */
   header { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
     padding:8px 14px; background:var(--panel); border:1px solid var(--border);
     border-radius:12px; backdrop-filter:blur(16px); margin-bottom:8px;
@@ -32,7 +31,6 @@
   .hdr-stats > div { display:flex; align-items:center; gap:5px; color:var(--dim); }
   .hdr-stats b { color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums; font-size:13px; }
 
-  /* ================= LAYOUT ================= */
   .layout { display:grid; grid-template-columns:236px minmax(0,1fr) 286px;
     gap:8px; flex:1 1 auto; min-height:0; }
   .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px;
@@ -53,14 +51,12 @@
     display:flex; align-items:center; justify-content:center; min-width:22px; }
   .icon-btn:hover { background:rgba(79,209,197,.3); transform:translateY(-1px); }
 
-  /* ================= STAGE ================= */
   .stage { background:var(--panel); border:1px solid var(--border); border-radius:12px;
     backdrop-filter:blur(16px); position:relative; overflow:hidden;
     box-shadow:0 4px 40px rgba(0,0,0,.4); min-height:0; }
   #world { position:absolute; inset:0; width:100%; height:100%; display:block;
     background:#05080f; cursor:crosshair; touch-action:none; }
 
-  /* ================= OVERLAYS ================= */
   .tooltip { position:absolute; pointer-events:none; background:rgba(6,12,22,.95);
     border:1px solid var(--border-hi); padding:7px 10px; border-radius:8px;
     font-size:11px; color:#c5d4ea; line-height:1.5; opacity:0; transition:opacity .1s;
@@ -104,7 +100,6 @@
     pointer-events:none; opacity:0; transition:opacity .15s; z-index:14; border-radius:12px; }
   .drag-hint.show { opacity:1; }
 
-  /* ================= CONTROLS ================= */
   .field { display:flex; flex-direction:column; gap:3px; }
   .field label { font-size:11px; color:var(--dim); display:flex; justify-content:space-between; align-items:baseline; }
   .field label span { color:var(--accent); font-variant-numeric:tabular-nums; font-weight:600; font-size:10.5px; }
@@ -207,349 +202,171 @@
   ::-webkit-scrollbar { width:5px; height:5px; }
   ::-webkit-scrollbar-thumb { background:rgba(110,150,210,.25); border-radius:4px; }
 
-  /* ====================================================
-     MOBILE ELEMENTS (hidden by default)
-     ==================================================== */
-  .mobile-bar, .mobile-tools, .mobile-biome-bar, .drawer-overlay, .drawer-close {
-    display: none;
-  }
+  .mobile-bar, .mobile-tools, .mobile-biome-bar, .drawer-overlay, .drawer-close { display: none; }
 
-  /* ====================================================
-     MOBILE LAYOUT — up to 820px width OR coarse pointer
-     ==================================================== */
   @media (max-width: 820px) {
-    body {
-      padding: 0;
-      overflow: hidden;
-    }
+    body { padding: 0; overflow: hidden; }
     header { display: none; }
-
-    .layout {
-      display: block;
-      position: fixed;
-      inset: 0;
-      padding: 0;
-      gap: 0;
-    }
-
-    /* --- STAGE FULLSCREEN --- */
+    .layout { display: block; position: fixed; inset: 0; padding: 0; gap: 0; }
     .stage {
       position: fixed;
       top: calc(var(--mobile-bar-h) + env(safe-area-inset-top, 0px));
-      left: 0;
-      right: 0;
+      left: 0; right: 0;
       bottom: calc(var(--mobile-tools-h) + env(safe-area-inset-bottom, 0px));
-      border-radius: 0;
-      border: none;
-      z-index: 1;
+      border-radius: 0; border: none; z-index: 1;
     }
-
-    /* --- PANELS AS DRAWERS --- */
     .panel {
-      position: fixed;
-      top: 0;
-      bottom: 0;
-      width: 90%;
-      max-width: 380px;
-      z-index: 300;
-      border-radius: 0;
-      padding-top: calc(56px + env(safe-area-inset-top, 0px));
+      position: fixed; top: 0; bottom: 0; width: 90%; max-width: 380px;
+      z-index: 300; border-radius: 0;
+      padding-top: calc(60px + env(safe-area-inset-top, 0px));
       padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       transition: transform .3s cubic-bezier(.25,.8,.25,1);
-      box-shadow: 0 0 40px rgba(0,0,0,.75);
-      overscroll-behavior: contain;
+      box-shadow: 0 0 40px rgba(0,0,0,.75); overscroll-behavior: contain;
     }
     .panel.left { left: 0; transform: translateX(-105%); }
     .panel.right { right: 0; transform: translateX(105%); }
     .panel.open { transform: translateX(0); }
 
-    /* Add extra mobile-only blocks inside drawers */
-    .mobile-only-block { display: flex !important; }
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+      z-index: 250; opacity: 0; transition: opacity .25s; pointer-events: none;
+    }
+    .drawer-overlay.show { display: block; opacity: 1; pointer-events: auto; }
 
-    /* --- MOBILE TOP BAR --- */
+    .drawer-close {
+      display: flex; position: absolute;
+      top: calc(58px + env(safe-area-inset-top, 0px)); right: 12px;
+      width: 34px; height: 34px;
+      align-items: center; justify-content: center;
+      border-radius: 8px;
+      background: rgba(50,80,130,.5);
+      border: 1px solid rgba(110,160,230,.3);
+      color: var(--text); font-size: 15px; font-weight: 700;
+      cursor: pointer; z-index: 5;
+    }
+    .drawer-close:active { background: rgba(70,115,180,.7); transform: scale(.94); }
+
     .mobile-bar {
-      display: flex;
-      position: fixed;
+      display: flex; position: fixed;
       top: 0; left: 0; right: 0;
       height: calc(var(--mobile-bar-h) + env(safe-area-inset-top, 0px));
       padding: 4px 8px;
       padding-top: calc(4px + env(safe-area-inset-top, 0px));
-      z-index: 100;
-      background: rgba(12, 18, 32, 0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      z-index: 200;
+      background: rgba(12,18,32,.92);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
-      align-items: center;
-      gap: 6px;
+      align-items: center; gap: 6px;
     }
-
     .mob-btn {
-      all: unset;
-      cursor: pointer;
-      width: 40px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      all: unset; cursor: pointer;
+      width: 40px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
       border-radius: 9px;
-      background: rgba(50, 80, 130, 0.35);
-      border: 1px solid rgba(110, 160, 230, 0.25);
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1;
-      transition: .12s;
-      flex: 0 0 auto;
-      user-select: none;
-      -webkit-user-select: none;
+      background: rgba(50,80,130,.35);
+      border: 1px solid rgba(110,160,230,.25);
+      color: var(--text); font-size: 18px; line-height: 1;
+      transition: .12s; flex: 0 0 auto;
+      user-select: none; -webkit-user-select: none;
     }
-    .mob-btn:active {
-      background: rgba(70, 115, 180, 0.6);
-      transform: scale(0.94);
-    }
-    .mob-btn.accent {
-      background: linear-gradient(135deg, #2f9e93, #3b7fd4);
-      border-color: transparent;
-      color: #fff;
-    }
-    .mob-btn.accent.pause {
-      background: linear-gradient(135deg, #b8535f, #8b3a5a);
-    }
-
+    .mob-btn:active { background: rgba(70,115,180,.6); transform: scale(.94); }
+    .mob-btn.accent { background: linear-gradient(135deg,#2f9e93,#3b7fd4); border-color: transparent; color: #fff; }
+    .mob-btn.accent.pause { background: linear-gradient(135deg,#b8535f,#8b3a5a); }
     .mob-stats {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 14px;
-      font-size: 12.5px;
-      color: var(--dim);
-      min-width: 0;
-      overflow: hidden;
+      flex: 1; display: flex; justify-content: center; align-items: center;
+      gap: 14px; font-size: 12.5px; color: var(--dim);
+      min-width: 0; overflow: hidden;
     }
-    .mob-stats span {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-    .mob-stats b {
-      color: var(--accent);
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      font-size: 13.5px;
-    }
+    .mob-stats span { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .mob-stats b { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; font-size: 13.5px; }
 
-    /* --- MOBILE BOTTOM TOOLBAR --- */
     .mobile-tools {
-      display: flex;
-      position: fixed;
+      display: flex; position: fixed;
       bottom: 0; left: 0; right: 0;
       height: calc(var(--mobile-tools-h) + env(safe-area-inset-bottom, 0px));
-      padding: 6px 6px;
+      padding: 6px;
       padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
-      z-index: 100;
-      background: rgba(12, 18, 32, 0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      z-index: 200;
+      background: rgba(12,18,32,.92);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border-top: 1px solid var(--border);
       gap: 5px;
     }
-
     .mob-tool {
-      all: unset;
-      cursor: pointer;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
+      all: unset; cursor: pointer; flex: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2px;
       border-radius: 10px;
-      background: rgba(50, 80, 130, 0.22);
-      border: 1px solid rgba(110, 160, 230, 0.15);
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1;
-      transition: .12s;
-      padding: 4px 2px;
-      min-width: 0;
-      user-select: none;
-      -webkit-user-select: none;
+      background: rgba(50,80,130,.22);
+      border: 1px solid rgba(110,160,230,.15);
+      color: var(--text); font-size: 18px; line-height: 1;
+      transition: .12s; padding: 4px 2px; min-width: 0;
+      user-select: none; -webkit-user-select: none;
     }
     .mob-tool span {
-      font-size: 9px;
-      font-weight: 600;
-      color: var(--dim);
-      letter-spacing: .3px;
-      text-transform: uppercase;
+      font-size: 9px; font-weight: 600; color: var(--dim);
+      letter-spacing: .3px; text-transform: uppercase;
     }
-    .mob-tool:active {
-      background: rgba(70, 115, 180, 0.55);
-      transform: scale(0.95);
-    }
+    .mob-tool:active { background: rgba(70,115,180,.55); transform: scale(.95); }
     .mob-tool.active {
-      background: linear-gradient(135deg, rgba(47, 158, 147, 0.7), rgba(59, 127, 212, 0.7));
-      border-color: rgba(110, 231, 216, 0.6);
-      box-shadow: 0 0 12px rgba(79, 209, 197, 0.35);
+      background: linear-gradient(135deg,rgba(47,158,147,.7),rgba(59,127,212,.7));
+      border-color: rgba(110,231,216,.6);
+      box-shadow: 0 0 12px rgba(79,209,197,.35);
     }
     .mob-tool.active span { color: #fff; }
-    .mob-tool.accent {
-      background: linear-gradient(135deg, #2f9e93, #3b7fd4);
-      border-color: transparent;
-    }
-    .mob-tool.accent span { color: #fff; }
-    .mob-tool.accent.pause {
-      background: linear-gradient(135deg, #b8535f, #8b3a5a);
-    }
 
-    /* --- MOBILE BIOME BAR --- */
     .mobile-biome-bar {
       position: fixed;
       bottom: calc(var(--mobile-tools-h) + env(safe-area-inset-bottom, 0px) + 6px);
-      left: 6px;
-      right: 6px;
-      z-index: 95;
-      background: rgba(12, 18, 32, 0.95);
+      left: 6px; right: 6px;
+      z-index: 190;
+      background: rgba(12,18,32,.95);
       backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-hi);
-      border-radius: 10px;
+      border: 1px solid var(--border-hi); border-radius: 10px;
       padding: 8px;
       box-shadow: 0 4px 24px rgba(0,0,0,.6);
       transform: translateY(120%);
       transition: transform .25s cubic-bezier(.25,.8,.25,1);
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      overflow-x: auto; overflow-y: hidden;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none;
     }
     .mobile-biome-bar::-webkit-scrollbar { display: none; }
-    .mobile-biome-bar.show {
-      display: flex !important;
-      transform: translateY(0);
-    }
+    .mobile-biome-bar.show { display: flex !important; transform: translateY(0); }
     .mobile-biome-bar .mb-item {
-      flex: 0 0 auto;
-      width: 40px;
-      height: 40px;
-      margin-right: 5px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 17px;
-      cursor: pointer;
+      flex: 0 0 auto; width: 40px; height: 40px;
+      margin-right: 5px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; cursor: pointer;
       border: 1.5px solid transparent;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
-      transition: .12s;
-      user-select: none;
+      transition: .12s; user-select: none;
     }
-    .mobile-biome-bar .mb-item:active { transform: scale(0.92); }
+    .mobile-biome-bar .mb-item:active { transform: scale(.92); }
     .mobile-biome-bar .mb-item.active {
       border-color: var(--accent);
-      box-shadow: 0 0 10px rgba(79, 209, 197, 0.7), inset 0 0 0 1px rgba(0,0,0,.35);
+      box-shadow: 0 0 10px rgba(79,209,197,.7), inset 0 0 0 1px rgba(0,0,0,.35);
     }
 
-    /* --- DRAWER OVERLAY --- */
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-      z-index: 250;
-      opacity: 0;
-      transition: opacity .25s;
-      pointer-events: none;
-    }
-    .drawer-overlay.show {
-      display: block;
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    /* --- CLOSE BUTTONS INSIDE DRAWERS --- */
-    .drawer-close {
-      display: flex;
-      position: absolute;
-      top: calc(12px + env(safe-area-inset-top, 0px));
-      right: 12px;
-      width: 36px;
-      height: 36px;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      background: rgba(50, 80, 130, 0.5);
-      border: 1px solid rgba(110, 160, 230, 0.3);
-      color: var(--text);
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      z-index: 1;
-    }
-    .drawer-close:active { background: rgba(70, 115, 180, 0.7); transform: scale(0.94); }
-
-    /* --- MINIMAP: smaller on mobile --- */
-    .minimap-wrap {
-      top: 8px;
-      right: 8px;
-      width: 110px;
-      height: 69px;
-    }
-
-    /* --- ZOOM CTRL: vertical on mobile --- */
+    .minimap-wrap { top: 8px; right: 8px; width: 110px; height: 69px; }
     .zoom-ctrl {
-      right: 8px;
-      bottom: 8px;
-      flex-direction: column;
-      padding: 4px;
-      gap: 4px;
-      background: rgba(8, 14, 26, 0.85);
+      right: 8px; bottom: 8px;
+      flex-direction: column; padding: 4px; gap: 4px;
+      background: rgba(8,14,26,.85);
     }
-    .zoom-ctrl input[type=range] {
-      display: none;
-    }
-    .zoom-ctrl button {
-      width: 34px;
-      height: 34px;
-      font-size: 18px;
-    }
-    .zoom-val {
-      font-size: 10px;
-      min-width: auto;
-      padding: 2px 0;
-    }
+    .zoom-ctrl input[type=range] { display: none; }
+    .zoom-ctrl button { width: 34px; height: 34px; font-size: 18px; }
+    .zoom-val { font-size: 10px; min-width: auto; padding: 2px 0; }
 
-    /* --- Bigger touch targets in drawers --- */
-    .panel button,
-    .panel .icon-btn {
-      min-height: 38px;
-      padding: 9px 11px;
-      font-size: 12.5px;
-    }
-    .panel .civ {
-      min-height: 40px;
-      padding: 8px 10px;
-    }
-    .panel .civ-del {
-      width: 26px;
-      height: 26px;
-      opacity: 1;
-      color: #8ba0bd;
-    }
-    .panel .tool-btn {
-      padding: 12px 6px;
-      font-size: 20px;
-    }
-    .panel .biome-item {
-      font-size: 18px;
-    }
-
-    /* When mobile bar / tools open, prevent scroll behind */
+    .panel button, .panel .icon-btn { min-height: 38px; padding: 9px 11px; font-size: 12.5px; }
+    .panel .civ { min-height: 40px; padding: 8px 10px; }
+    .panel .civ-del { width: 26px; height: 26px; opacity: 1; color: #8ba0bd; }
+    .panel .tool-btn { padding: 12px 6px; font-size: 20px; }
+    .panel .biome-item { font-size: 18px; }
     body.drawer-open { overflow: hidden; }
   }
 
-  /* Super-narrow phones */
   @media (max-width: 360px) {
     .mob-stats { font-size: 11px; gap: 8px; }
     .mob-stats b { font-size: 12px; }
@@ -561,7 +378,6 @@
 </head>
 <body>
 
-<!-- ============ DESKTOP HEADER ============ -->
 <header>
   <h1>🌍 Симулятор Мира</h1>
   <div class="hdr-stats">
@@ -573,7 +389,6 @@
   </div>
 </header>
 
-<!-- ============ MOBILE TOP BAR ============ -->
 <div class="mobile-bar" id="mobileBar">
   <button class="mob-btn" id="openLeftDrawer" title="Меню">☰</button>
   <div class="mob-stats">
@@ -585,13 +400,10 @@
   <button class="mob-btn" id="btnFullscreen" title="На весь экран">⛶</button>
 </div>
 
-<!-- ============ LAYOUT ============ -->
 <div class="layout">
 
-  <!-- LEFT PANEL (drawer on mobile) -->
   <aside class="panel left" id="panelLeft">
     <button class="drawer-close" data-close="left">✕</button>
-
     <h2>Время</h2>
     <div class="row">
       <button id="btn-play" class="primary">▶ Старт</button>
@@ -639,7 +451,6 @@
     <div class="legend" id="legend"></div>
   </aside>
 
-  <!-- STAGE -->
   <main class="stage" id="stage">
     <canvas id="world"></canvas>
     <div class="drag-hint" id="drag-hint"></div>
@@ -664,10 +475,8 @@
     </div>
   </main>
 
-  <!-- RIGHT PANEL (drawer on mobile) -->
   <aside class="panel right" id="panelRight">
     <button class="drawer-close" data-close="right">✕</button>
-
     <div class="h2-row">
       <h2>Государства</h2>
       <div class="line"></div>
@@ -675,16 +484,15 @@
     </div>
     <div class="civ-list" id="civ-list"></div>
     <div class="details" id="details"></div>
-
     <h2>Хроника</h2>
     <div class="log" id="log"></div>
   </aside>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
 </div>
 
-<!-- ============ MOBILE BIOME BAR ============ -->
 <div class="mobile-biome-bar" id="mobileBiomeBar"></div>
 
-<!-- ============ MOBILE TOOLBAR ============ -->
 <div class="mobile-tools" id="mobileTools">
   <button class="mob-tool active" data-tool="view">👁<span>Вид</span></button>
   <button class="mob-tool" data-tool="civ">👥<span>Цив.</span></button>
@@ -693,14 +501,8 @@
   <button class="mob-tool" id="mobToolsBtn">⚙<span>Ещё</span></button>
 </div>
 
-<!-- ============ DRAWER OVERLAY ============ -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-
 <script>
 'use strict';
-/* ============================================================
-   КОНСТАНТЫ
-   ============================================================ */
 const COLS = 160, ROWS = 100;
 const SUB = 8;
 const W = COLS * SUB, H = ROWS * SUB;
@@ -740,34 +542,22 @@ const DISASTER_TYPES = {
   plague:  { name:'Пандемия', icon:'🦠', color:'#fbbf24', rgb:[251,191,36],
              duration:32, initialRadius:2.0, growthRate:0.85, maxRadius:40, kind:'civ' },
 };
-
 const LAVA_COOL_RATE = 0.0055;
 
-/* ============================================================
-   УТИЛИТЫ
-   ============================================================ */
 const clamp = (v,a,b) => v<a?a:v>b?b:v;
 const lerp = (a,b,t) => a+(b-a)*t;
 const clampI = (v,a,b) => v<a?a:v>b?b:v;
 const el = id => document.getElementById(id);
 const isMobile = () => window.matchMedia('(max-width: 820px)').matches;
 
-function hexToRgb(h) {
-  return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
-}
+function hexToRgb(h) { return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
 function hash2i(x,y) {
   let h = (x*374761393 + y*668265263)|0;
   h = ((h ^ (h>>13)) * 1274126177)|0;
   return ((h ^ (h>>16)) & 0x7fffffff) / 0x7fffffff;
 }
-function smoothstep(e0,e1,x) {
-  const t = clamp((x-e0)/(e1-e0),0,1);
-  return t*t*(3-2*t);
-}
+function smoothstep(e0,e1,x) { const t = clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); }
 
-/* ============================================================
-   ШУМ
-   ============================================================ */
 function coarse(scale, pad) {
   pad = pad||4;
   const gw = Math.ceil(COLS/scale) + pad*2 + 3;
@@ -800,9 +590,6 @@ function sampleField(field,x,y) {
   return (a*(1-tx)+b*tx)*(1-ty) + (c*(1-tx)+d*tx)*ty;
 }
 
-/* ============================================================
-   СОСТОЯНИЕ
-   ============================================================ */
 const stageEl = el('stage');
 const canvas  = el('world');
 const ctx     = canvas.getContext('2d');
@@ -821,7 +608,6 @@ let tiles = [];
 let rivers = [];
 let heightsSub = null;
 let moistSub = null;
-
 let civs = [];
 let activeDisasters = [];
 let activeLava = new Set();
@@ -859,17 +645,11 @@ function markOverlayDirtyTile(tx,ty) {
 }
 function markOverlayFull() { overlayDirtyRect = {x0:0,y0:0,x1:COLS-1,y1:ROWS-1}; }
 
-/* ============================================================
-   КОНВЕРТАЦИЯ
-   ============================================================ */
 const tempToCelsius = t => -20 + (t-0.30)/0.85*60;
 const celsiusLabel  = t => { const c = Math.round(tempToCelsius(t)); return (c>=0?'+':'')+c+'°C'; };
 const seaToMeters   = s => Math.round((s-0.45)*1500);
 const metersLabel   = s => { const m = seaToMeters(s); return (m>0?'+':'')+m+' м'; };
 
-/* ============================================================
-   ГЕНЕРАЦИЯ
-   ============================================================ */
 function generate() {
   const warpX = coarse(24,6), warpY = coarse(24,6);
   const contA = coarse(36,6), contB = coarse(18,6);
@@ -931,10 +711,7 @@ function generate() {
         0.30*sampleCoarse(moistB,x,y) +
         0.20*sampleCoarse(moistC,x,y), 0, 1);
       if (!isFinite(moist)) moist = 0.5;
-      tiles[i] = {
-        h, moist, biome:'deep', owner:-1, fert:0, land:false,
-        override:null, lava:0, basalt:false,
-      };
+      tiles[i] = { h, moist, biome:'deep', owner:-1, fert:0, land:false, override:null, lava:0, basalt:false };
     }
   }
   for (let i=0;i<tiles.length;i++) {
@@ -951,10 +728,8 @@ function generate() {
 function generateRivers() {
   rivers = [];
   const sources = [];
-  for (let i=0;i<tiles.length;i++)
-    if (tiles[i].h > seaLevel + 0.28) sources.push(i);
+  for (let i=0;i<tiles.length;i++) if (tiles[i].h > seaLevel + 0.28) sources.push(i);
   sources.sort((a,b) => tiles[b].h - tiles[a].h);
-
   const targetCount = 36;
   let made = 0;
   for (let a=0; a<1100 && made<targetCount && sources.length; a++) {
@@ -1012,7 +787,6 @@ function classifyTile(i) {
   const lat = Math.abs(y/(ROWS-1)-0.5)*2;
   const tempBase = clamp(tempLevel*(1-lat*lat*0.88),0,1);
   const temp = tempBase*(1-((t.h-seaLevel)/Math.max(0.001,1-seaLevel))*0.5);
-
   let b;
   if (t.override && BIOMES[t.override]) b = t.override;
   else if (t.basalt)                    b = 'basalt';
@@ -1030,7 +804,6 @@ function classifyTile(i) {
     else                      b = 'forest';
     if (e < 0.022 && b !== 'snow' && b !== 'peak' && b !== 'mountain') b = 'beach';
   }
-
   t.biome = b;
   t.land = !WATER_BIOMES.has(b);
   t.fert = BIOMES[b].f;
@@ -1043,31 +816,22 @@ function classifyAllBiomes() {
   markTerrainFull();
   markOverlayFull();
 }
-
 function syncCivTiles() {
   const map = new Map();
   for (let i=0;i<tiles.length;i++) {
     const o = tiles[i].owner;
-    if (o>=0) {
-      let s = map.get(o); if (!s) { s = new Set(); map.set(o,s); }
-      s.add(i);
-    }
+    if (o>=0) { let s = map.get(o); if (!s) { s = new Set(); map.set(o,s); } s.add(i); }
   }
   for (const c of civs) c.tiles = map.get(c.id) || new Set();
 }
 
-/* ============================================================
-   РЕНДЕР РЕЛЬЕФА
-   ============================================================ */
 function renderTerrainRange(tx0, ty0, tx1, ty1) {
   if (!heightsSub || !moistSub) precomputeSubFields();
   tx0 = clampI(tx0|0, 0, COLS-1); ty0 = clampI(ty0|0, 0, ROWS-1);
   tx1 = clampI(tx1|0, 0, COLS-1); ty1 = clampI(ty1|0, 0, ROWS-1);
   if (tx0>tx1 || ty0>ty1) return;
-
   const px0 = tx0*SUB, py0 = ty0*SUB;
   const px1 = (tx1+1)*SUB, py1 = (ty1+1)*SUB;
-
   const d = terrainImg.data;
   const seaLvl = seaLevel;
   const invSea = 1 / Math.max(0.001, 1 - seaLvl);
@@ -1084,23 +848,17 @@ function renderTerrainRange(tx0, ty0, tx1, ty1) {
       const h = heightsSub[idx];
       const m = moistSub[idx];
       const o = rowOff4 + px*4;
-
-      if (!isFinite(h)||!isFinite(m)) {
-        d[o]=15; d[o+1]=30; d[o+2]=60; d[o+3]=255; continue;
-      }
-
+      if (!isFinite(h)||!isFinite(m)) { d[o]=15; d[o+1]=30; d[o+2]=60; d[o+3]=255; continue; }
       const hl = px>0 ? heightsSub[idx-1] : h;
       const hr = px<W-1 ? heightsSub[idx+1] : h;
       const hu = py>0 ? heightsSub[idx-W] : h;
       const hd = py<H-1 ? heightsSub[idx+W] : h;
       const gx = (hr-hl)*3;
       const gy = (hd-hu)*3;
-
       const tx = (px/SUB)|0;
       const tile = tiles[tyCOLS+tx];
       const ov = tile ? tile.override : null;
       const hasLava = tile && tile.lava > 0;
-
       let r,g,b;
 
       if (ov && BIOMES[ov]) {
@@ -1116,19 +874,10 @@ function renderTerrainRange(tx0, ty0, tx1, ty1) {
       } else if (h < seaLvl) {
         const depth = (seaLvl-h)/Math.max(0.001,seaLvl);
         let wr,wg,wb;
-        if (depth < 0.10) {
-          const t = depth/0.10;
-          wr = lerp(140,90,t); wg = lerp(200,165,t); wb = lerp(210,195,t);
-        } else if (depth < 0.32) {
-          const t = (depth-0.10)/0.22;
-          wr = lerp(90,42,t); wg = lerp(165,100,t); wb = lerp(195,158,t);
-        } else if (depth < 0.62) {
-          const t = (depth-0.32)/0.30;
-          wr = lerp(42,16,t); wg = lerp(100,44,t); wb = lerp(158,105,t);
-        } else {
-          const t = (depth-0.62)/0.38;
-          wr = lerp(16,6,t); wg = lerp(44,18,t); wb = lerp(105,58,t);
-        }
+        if (depth < 0.10) { const t = depth/0.10; wr = lerp(140,90,t); wg = lerp(200,165,t); wb = lerp(210,195,t); }
+        else if (depth < 0.32) { const t = (depth-0.10)/0.22; wr = lerp(90,42,t); wg = lerp(165,100,t); wb = lerp(195,158,t); }
+        else if (depth < 0.62) { const t = (depth-0.32)/0.30; wr = lerp(42,16,t); wg = lerp(100,44,t); wb = lerp(158,105,t); }
+        else { const t = (depth-0.62)/0.38; wr = lerp(16,6,t); wg = lerp(44,18,t); wb = lerp(105,58,t); }
         const wave = Math.sin(px*0.06 + py*0.045 + Math.sin(py*0.08)*2.5)*0.5;
         const wsh = 1 + wave*0.10;
         wr*=wsh; wg*=wsh; wb*=wsh;
@@ -1146,24 +895,18 @@ function renderTerrainRange(tx0, ty0, tx1, ty1) {
         const e = (h-seaLvl)*invSea;
         const temp = tempBase*(1-e*0.6);
         const dry = 1-m, cold = 1-temp;
-
         r = 212*(temp*dry) + 45*(temp*m) + 155*(cold*dry) + 72*(cold*m);
         g = 180*(temp*dry) + 95*(temp*m) + 155*(cold*dry) + 105*(cold*m);
         b = 118*(temp*dry) + 50*(temp*m) + 148*(cold*dry) + 75*(cold*m);
-
         const slope = Math.sqrt(gx*gx+gy*gy)*3;
         const rockT = smoothstep(0.6,2.5,slope);
         r = lerp(r,115,rockT*0.75); g = lerp(g,106,rockT*0.75); b = lerp(b,98,rockT*0.75);
-
         const snowT = smoothstep(0.55,0.82, e + (1-temp)*0.35);
         r = lerp(r,244,snowT); g = lerp(g,248,snowT); b = lerp(b,252,snowT);
-
         const beachT = (1-smoothstep(0,0.025,e))*(1-snowT)*smoothstep(0.15,0.4,temp);
         r = lerp(r,218,beachT*0.8); g = lerp(g,200,beachT*0.8); b = lerp(b,155,beachT*0.8);
-
         const nv = (hash2i(px,py)-0.5)*(10+m*8);
         r += nv; g += nv*0.95; b += nv*0.85;
-
         const nx = -gx*20, ny = -gy*20;
         const nl = Math.sqrt(nx*nx+ny*ny+1);
         const dot = (nx/nl)*(-0.55) + (ny/nl)*(-0.55) + (1/nl)*0.62;
@@ -1172,33 +915,24 @@ function renderTerrainRange(tx0, ty0, tx1, ty1) {
         shade *= clamp(1-(avgH-h)*6, 0.65, 1.1);
         r*=shade; g*=shade; b*=shade;
       }
-
       if (hasLava) {
         const heat = tile.lava;
-        const lr = 255;
-        const lg = 55 + heat*145;
-        const lb = 12 + heat*30;
+        const lr = 255, lg = 55 + heat*145, lb = 12 + heat*30;
         const blend = Math.min(1, heat*1.15);
-        r = lerp(r,lr,blend);
-        g = lerp(g,lg,blend);
-        b = lerp(b,lb,blend);
+        r = lerp(r,lr,blend); g = lerp(g,lg,blend); b = lerp(b,lb,blend);
         const lg2 = (hash2i(px*3, py*3)-0.5)*40*heat;
         r += lg2; g += lg2*0.6; b += lg2*0.2;
         if (heat < 0.5) {
           const crust = (1-heat/0.5);
-          r = lerp(r, 55, crust*0.5);
-          g = lerp(g, 48, crust*0.5);
-          b = lerp(b, 46, crust*0.5);
+          r = lerp(r, 55, crust*0.5); g = lerp(g, 48, crust*0.5); b = lerp(b, 46, crust*0.5);
         }
       }
-
       d[o]   = r<0?0:r>255?255:r;
       d[o+1] = g<0?0:g>255?255:g;
       d[o+2] = b<0?0:b>255?255:b;
       d[o+3] = 255;
     }
   }
-
   terrainCtx.putImageData(terrainImg, 0, 0, px0, py0, px1-px0, py1-py0);
   drawRiversInRect(px0, py0, px1, py1);
   updateMinimap();
@@ -1212,9 +946,7 @@ function drawRiversInRect(x0,y0,x1,y1) {
   terrainCtx.clip();
   terrainCtx.lineCap = 'round';
   terrainCtx.lineJoin = 'round';
-
   const tx0 = x0/SUB - 1, ty0 = y0/SUB - 1, tx1 = x1/SUB + 1, ty1 = y1/SUB + 1;
-
   for (const river of rivers) {
     if (river.length < 2) continue;
     const N = river.length;
@@ -1224,20 +956,16 @@ function drawRiversInRect(x0,y0,x1,y1) {
       const r2x = t2%COLS, r2y = (t2/COLS)|0;
       if ((r1x<tx0 && r2x<tx0) || (r1x>tx1 && r2x>tx1)) continue;
       if ((r1y<ty0 && r2y<ty0) || (r1y>ty1 && r2y>ty1)) continue;
-
       const x1p = (r1x+0.5)*SUB, y1p = (r1y+0.5)*SUB;
       const x2p = (r2x+0.5)*SUB, y2p = (r2y+0.5)*SUB;
       const p = i/N;
       const w = 1.1 + p*p*4.5;
-
       terrainCtx.lineWidth = w*1.8;
       terrainCtx.strokeStyle = `rgba(25,50,78,${0.4+p*0.3})`;
       terrainCtx.beginPath(); terrainCtx.moveTo(x1p,y1p); terrainCtx.lineTo(x2p,y2p); terrainCtx.stroke();
-
       terrainCtx.lineWidth = w;
       terrainCtx.strokeStyle = `rgba(78,145,200,${0.75+p*0.2})`;
       terrainCtx.beginPath(); terrainCtx.moveTo(x1p,y1p); terrainCtx.lineTo(x2p,y2p); terrainCtx.stroke();
-
       if (w > 1.8) {
         terrainCtx.lineWidth = w*0.35;
         terrainCtx.strokeStyle = `rgba(185,225,248,${0.45+p*0.3})`;
@@ -1252,10 +980,8 @@ function updateCivOverlayRange(tx0,ty0,tx1,ty1) {
   tx0 = clampI(tx0|0, 0, COLS-1); ty0 = clampI(ty0|0, 0, ROWS-1);
   tx1 = clampI(tx1|0, 0, COLS-1); ty1 = clampI(ty1|0, 0, ROWS-1);
   if (tx0>tx1 || ty0>ty1) return;
-
   const d = civImg.data;
   const rowStride = W*4;
-
   for (let ty=ty0; ty<=ty1; ty++) {
     for (let tx=tx0; tx<=tx1; tx++) {
       const tileIdx = ty*COLS+tx;
@@ -1276,14 +1002,10 @@ function updateCivOverlayRange(tx0,ty0,tx1,ty1) {
   civCtx.putImageData(civImg, 0, 0, tx0*SUB, ty0*SUB, (tx1-tx0+1)*SUB, (ty1-ty0+1)*SUB);
 }
 
-/* ============================================================
-   МИНИКАРТА
-   ============================================================ */
 const minimapEl = el('minimap');
 const minimapCtx = minimapEl.getContext('2d');
 const minimapView = el('minimap-view');
 let minimapScheduled = false;
-
 function updateMinimap() {
   if (minimapScheduled) return;
   minimapScheduled = true;
@@ -1306,29 +1028,17 @@ function updateMinimapView() {
   minimapView.style.height = (sh/ROWS*100)+'%';
 }
 
-/* ============================================================
-   РАЗМЕР КАНВАСА
-   ============================================================ */
 function resizeCanvas() {
   const w = stageEl.clientWidth, h = stageEl.clientHeight;
   if (w<=0||h<=0) return;
   const dpr = Math.min(2, window.devicePixelRatio||1);
   const nw = Math.max(1,Math.round(w*dpr));
   const nh = Math.max(1,Math.round(h*dpr));
-  if (canvas.width !== nw || canvas.height !== nh) {
-    canvas.width = nw; canvas.height = nh;
-  }
+  if (canvas.width !== nw || canvas.height !== nh) { canvas.width = nw; canvas.height = nh; }
 }
 new ResizeObserver(resizeCanvas).observe(stageEl);
 
-/* ============================================================
-   ЦИВИЛИЗАЦИИ
-   ============================================================ */
-function countAliveCivs() {
-  let n = 0;
-  for (const c of civs) if (c.alive && !c.deleted) n++;
-  return n;
-}
+function countAliveCivs() { let n = 0; for (const c of civs) if (c.alive && !c.deleted) n++; return n; }
 function findFreeLandTile(minFert) {
   const good=[], any=[];
   for (let i=0;i<tiles.length;i++) {
@@ -1346,12 +1056,9 @@ function createCivAt(i, silent, customName) {
   if (!tiles[i] || !tiles[i].land || tiles[i].owner !== -1) return null;
   const id = civs.length;
   const ci = id % CIV_COLORS.length;
-  const c = {
-    id, name: customName || CIV_NAMES[id % CIV_NAMES.length],
+  const c = { id, name: customName || CIV_NAMES[id % CIV_NAMES.length],
     color: CIV_COLORS[ci], rgb: hexToRgb(CIV_COLORS[ci]),
-    alive:true, tiles:new Set([i]), pop:10, capital:i,
-    age:0, founded:year, deleted:false,
-  };
+    alive:true, tiles:new Set([i]), pop:10, capital:i, age:0, founded:year, deleted:false };
   tiles[i].owner = id;
   civs.push(c);
   markOverlayDirtyTile(i%COLS, (i/COLS)|0);
@@ -1382,17 +1089,13 @@ function deleteCiv(id) {
   if (!c || c.deleted) return;
   if (!confirm(`Удалить цивилизацию "${c.name}"?`)) return;
   for (const i of c.tiles) if (tiles[i].owner === id) tiles[i].owner = -1;
-  c.tiles.clear();
-  c.alive = false; c.deleted = true; c.pop = 0;
+  c.tiles.clear(); c.alive = false; c.deleted = true; c.pop = 0;
   markOverlayFull();
   addLog(`🗑️ Цивилизация <b style="color:${c.color}">${c.name}</b> удалена`);
   if (selectedCivId === id) onSelectionChanged(-1);
   else { rebuildCivList(); updateHeaderNumbers(); }
 }
 
-/* ============================================================
-   СИМУЛЯЦИЯ
-   ============================================================ */
 function tick() {
   year++;
   for (const c of civs) {
@@ -1435,9 +1138,8 @@ function tryExpand(c) {
   for (const p of pool) { r -= p.w; if (r<=0) { pick = p; break; } }
   const t = tiles[pick.i];
   const tx = pick.i%COLS, ty = (pick.i/COLS)|0;
-  if (t.owner === -1) {
-    t.owner = c.id; c.tiles.add(pick.i); c.pop *= 0.91;
-  } else {
+  if (t.owner === -1) { t.owner = c.id; c.tiles.add(pick.i); c.pop *= 0.91; }
+  else {
     const o = civs[t.owner];
     o.tiles.delete(pick.i); t.owner = c.id; c.tiles.add(pick.i);
     o.pop *= 0.90; c.pop *= 0.94;
@@ -1445,7 +1147,6 @@ function tryExpand(c) {
   }
   markOverlayDirtyTile(tx,ty);
 }
-
 function tickLava() {
   if (activeLava.size === 0) return;
   const toRemove = [];
@@ -1453,17 +1154,11 @@ function tickLava() {
     const t = tiles[i];
     if (!t) { toRemove.push(i); continue; }
     t.lava -= LAVA_COOL_RATE;
-    if (t.lava <= 0) {
-      t.lava = 0;
-      t.basalt = true;
-      classifyTile(i);
-      toRemove.push(i);
-    }
+    if (t.lava <= 0) { t.lava = 0; t.basalt = true; classifyTile(i); toRemove.push(i); }
     markTerrainDirtyTile(i%COLS, (i/COLS)|0);
   }
   for (const i of toRemove) activeLava.delete(i);
 }
-
 function spawnDisaster(type, wx, wy) {
   const def = DISASTER_TYPES[type]; if (!def) return;
   const cx = clamp(wx,0,COLS-1), cy = clamp(wy,0,ROWS-1);
@@ -1478,10 +1173,7 @@ function tickDisasters() {
     if (d.def.kind === 'terrain') applyTerrainDisaster(d);
     else if (d.def.kind === 'civ') applyCivDisaster(d);
     d.appliedRadius = d.radius;
-    if (d.age > d.def.duration) {
-      activeDisasters.splice(i,1);
-      addLog(`${d.def.icon} ${d.def.name} завершилась`);
-    }
+    if (d.age > d.def.duration) { activeDisasters.splice(i,1); addLog(`${d.def.icon} ${d.def.name} завершилась`); }
   }
 }
 function applyTerrainDisaster(d) {
@@ -1492,7 +1184,6 @@ function applyTerrainDisaster(d) {
   const y0 = Math.max(0, Math.floor(d.cy-newR)-1);
   const y1 = Math.min(ROWS-1, Math.ceil(d.cy+newR)+1);
   const nR2 = newR*newR, oR2 = oldR*oldR;
-
   for (let y=y0; y<=y1; y++) {
     for (let x=x0; x<=x1; x++) {
       const dx = x-d.cx, dy = y-d.cy, d2 = dx*dx+dy*dy;
@@ -1509,10 +1200,7 @@ function applyTerrainDisaster(d) {
         t.h = Math.min(1, t.h + (1-rel)*0.35 + 0.15);
         t.basalt = false;
         const fresh = Math.max(0.35, 1 - rel*0.55);
-        if (fresh > t.lava) {
-          t.lava = fresh;
-          activeLava.add(y*COLS+x);
-        }
+        if (fresh > t.lava) { t.lava = fresh; activeLava.add(y*COLS+x); }
       }
       if (!isFinite(t.h)) t.h = 0.5;
       t.owner = -1;
@@ -1582,9 +1270,6 @@ function flood() {
   addLog(`🌊 Потоп — уровень океана ${metersLabel(seaLevel)}`);
 }
 
-/* ============================================================
-   РИСОВАНИЕ
-   ============================================================ */
 function brushTiles(cx,cy,r) {
   const out = [], r2 = r*r;
   for (let dy=-r; dy<=r; dy++) for (let dx=-r; dx<=r; dx++) {
@@ -1604,8 +1289,7 @@ function paintTileCiv(i) {
   if (t.owner >= 0) {
     const o = civs[t.owner];
     if (!o || o.pop > c.pop*0.85) return false;
-    o.tiles.delete(i);
-    o.pop = Math.max(1, o.pop*0.98);
+    o.tiles.delete(i); o.pop = Math.max(1, o.pop*0.98);
     if (o.tiles.size === 0) o.alive = false;
   }
   t.owner = selectedCivId;
@@ -1654,26 +1338,15 @@ function applyBrush(tileIdx, fn) {
   return any;
 }
 
-/* ============================================================
-   РЕНДЕР КАДРА
-   ============================================================ */
 function render(time) {
   frameTime = time || 0;
   resizeCanvas();
-
-  if (terrainDirtyRect) {
-    renderTerrainRange(terrainDirtyRect.x0, terrainDirtyRect.y0, terrainDirtyRect.x1, terrainDirtyRect.y1);
-    terrainDirtyRect = null;
-  }
-  if (overlayDirtyRect) {
-    updateCivOverlayRange(overlayDirtyRect.x0, overlayDirtyRect.y0, overlayDirtyRect.x1, overlayDirtyRect.y1);
-    overlayDirtyRect = null;
-  }
+  if (terrainDirtyRect) { renderTerrainRange(terrainDirtyRect.x0, terrainDirtyRect.y0, terrainDirtyRect.x1, terrainDirtyRect.y1); terrainDirtyRect = null; }
+  if (overlayDirtyRect) { updateCivOverlayRange(overlayDirtyRect.x0, overlayDirtyRect.y0, overlayDirtyRect.x1, overlayDirtyRect.y1); overlayDirtyRect = null; }
 
   const z = view.zoom, sw = COLS/z, sh = ROWS/z;
   const sx = view.cx-sw/2, sy = view.cy-sh/2;
   const sX = canvas.width/sw, sY = canvas.height/sh;
-
   const sxSub = sx*SUB, sySub = sy*SUB, swSub = sw*SUB, shSub = sh*SUB;
 
   ctx.imageSmoothingEnabled = true;
@@ -1688,7 +1361,6 @@ function render(time) {
 
   ctx.save();
   ctx.setTransform(sX,0,0,sY,-sx*sX,-sy*sY);
-
   const paths = new Map();
   const addSeg = (id,x1,y1,x2,y2) => {
     let p = paths.get(id);
@@ -1699,7 +1371,6 @@ function render(time) {
   const maxX = Math.min(COLS, Math.ceil(sx+sw)+1);
   const minY = Math.max(0, Math.floor(sy)-1);
   const maxY = Math.min(ROWS, Math.ceil(sy+sh)+1);
-
   for (let y=minY; y<maxY; y++) {
     for (let x=minX; x<maxX; x++) {
       const i = y*COLS+x, t = tiles[i];
@@ -1710,11 +1381,9 @@ function render(time) {
       if (!d || d.owner !== t.owner) addSeg(t.owner, x, y+1, x+1, y+1);
     }
   }
-
   const hasSel = selectedCivId>=0 && civs[selectedCivId] && civs[selectedCivId].alive && !civs[selectedCivId].deleted;
   const hasHover = hoverCivId>=0 && civs[hoverCivId] && civs[hoverCivId].alive && !civs[hoverCivId].deleted;
   const baseLw = 1.4/Math.sqrt(sX);
-
   for (const [id,p] of paths) {
     const c = civs[id]; if (!c || c.deleted) continue;
     const dim = (hasSel && id !== selectedCivId) || (hasHover && id !== hoverCivId);
@@ -1724,7 +1393,6 @@ function render(time) {
     ctx.stroke(p);
   }
   ctx.globalAlpha = 1;
-
   const pulseId = hasSel ? selectedCivId : (hasHover ? hoverCivId : -1);
   if (pulseId >= 0 && paths.has(pulseId)) {
     const pulse = 0.5+0.5*Math.sin(frameTime/380);
@@ -1734,7 +1402,6 @@ function render(time) {
     ctx.stroke(paths.get(pulseId));
     ctx.globalAlpha = 1;
   }
-
   for (const c of civs) {
     if (!c.alive || c.deleted || !c.tiles.has(c.capital)) continue;
     const cx = (c.capital%COLS)+0.5, cy = ((c.capital/COLS)|0)+0.5;
@@ -1766,13 +1433,11 @@ function render(time) {
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font = '20px serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(def.icon, cx, cy);
     ctx.restore();
   }
 
-  // Подсветка "armed" катастрофы — курсор
   if (armedDisaster && hoverTile >= 0) {
     const hx = ((hoverTile%COLS)-sx)*sX + sX*0.5;
     const hy = (((hoverTile/COLS)|0)-sy)*sY + sY*0.5;
@@ -1785,8 +1450,7 @@ function render(time) {
     ctx.setLineDash([5,4]);
     ctx.beginPath(); ctx.arc(hx, hy, sX*1.2, 0, Math.PI*2); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font = '22px serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(def.icon, hx, hy);
     ctx.restore();
   }
@@ -1812,9 +1476,6 @@ function render(time) {
   updateMinimapView();
 }
 
-/* ============================================================
-   UI ЛОГИКА (структура + числа)
-   ============================================================ */
 function logColor(m) {
   if (m.includes('🌱')) return '#4ade80';
   if (m.includes('✨')) return '#7dd3fc';
@@ -1846,10 +1507,7 @@ function updateHeaderNumbers() {
   el('s-pop').textContent = popStr;
   el('s-land').textContent = land ? Math.round(owned/land*100)+'%' : '0%';
   el('s-zoom').textContent = view.zoom.toFixed(1)+'×';
-
-  // Мобильная шапка
-  const mobYear = el('mob-year');
-  const mobPop = el('mob-pop');
+  const mobYear = el('mob-year'); const mobPop = el('mob-pop');
   if (mobYear) mobYear.textContent = year;
   if (mobPop) mobPop.textContent = popStr;
 }
@@ -1860,12 +1518,10 @@ function rebuildCivList() {
   civNodes.clear();
   const vis = civs.filter(c => !c.deleted);
   const sorted = vis.slice().sort((a,b) => (b.alive-a.alive) || (b.pop-a.pop));
-
   if (!sorted.length) {
     list.innerHTML = '<div style="color:#5a6b85;font-size:11px;padding:6px">Нет цивилизаций. Нажмите ➕</div>';
     return;
   }
-
   list.innerHTML = '';
   for (const c of sorted) {
     const row = document.createElement('div');
@@ -1878,7 +1534,6 @@ function rebuildCivList() {
       <span class="paint-icon">✎</span>
       <button class="civ-del" data-del="${c.id}" title="Удалить">✕</button>
     `;
-
     const numEl = row.querySelector('.num');
     row.addEventListener('click', ev => {
       if (ev.target.closest('.civ-del')) return;
@@ -1889,10 +1544,7 @@ function rebuildCivList() {
     });
     row.addEventListener('mouseenter', () => { if (civs[c.id] && civs[c.id].alive && !civs[c.id].deleted) hoverCivId = c.id; });
     row.addEventListener('mouseleave', () => { if (hoverCivId === c.id) hoverCivId = -1; });
-    row.querySelector('.civ-del').addEventListener('click', ev => {
-      ev.stopPropagation();
-      deleteCiv(c.id);
-    });
+    row.querySelector('.civ-del').addEventListener('click', ev => { ev.stopPropagation(); deleteCiv(c.id); });
     list.appendChild(row);
     civNodes.set(c.id, { root: row, num: numEl });
   }
@@ -1904,9 +1556,7 @@ function updateCivListNumbers() {
     const txt = c.alive ? Math.round(c.pop) : '—';
     if (ref.num.textContent !== String(txt)) ref.num.textContent = txt;
     const wantDead = !c.alive;
-    if (ref.root.classList.contains('dead') !== wantDead) {
-      ref.root.classList.toggle('dead', wantDead);
-    }
+    if (ref.root.classList.contains('dead') !== wantDead) ref.root.classList.toggle('dead', wantDead);
   }
 }
 
@@ -1914,11 +1564,7 @@ let detailsRefs = null;
 function rebuildDetails() {
   const box = el('details');
   const c = selectedCivId >= 0 ? civs[selectedCivId] : null;
-  if (!c || !c.alive || c.deleted) {
-    box.classList.remove('show');
-    detailsRefs = null;
-    return;
-  }
+  if (!c || !c.alive || c.deleted) { box.classList.remove('show'); detailsRefs = null; return; }
   const capX = c.capital%COLS, capY = (c.capital/COLS)|0;
   box.classList.add('show');
   box.innerHTML = `
@@ -1933,10 +1579,7 @@ function rebuildDetails() {
     <div class="d-row"><span>Столица</span><b>(${capX}, ${capY})</b></div>
     <div class="hint-paint">✎ Кликайте или ведите по карте, чтобы расширить.<br>Esc — выйти из режима.</div>
   `;
-  detailsRefs = {
-    pop: el('d-pop'), tiles: el('d-tiles'),
-    fert: el('d-fert'), age: el('d-age'),
-  };
+  detailsRefs = { pop: el('d-pop'), tiles: el('d-tiles'), fert: el('d-fert'), age: el('d-age') };
   updateDetailsNumbers();
 }
 function updateDetailsNumbers() {
@@ -1967,39 +1610,29 @@ function rebuildPaintBanner() {
     sw.style.background = '#94a3b8'; sw.style.color = '#94a3b8';
     txt.innerHTML = `Ластик · ${brushSize}×${brushSize}`;
     banner.classList.add('show');
-  } else {
-    banner.classList.remove('show');
-  }
+  } else banner.classList.remove('show');
 }
 
 function onSelectionChanged(id) {
   selectedCivId = id;
   if (id >= 0 && tool !== 'civ' && tool !== 'biome' && tool !== 'erase') {
-    tool = 'civ';
-    syncToolButtons();
+    tool = 'civ'; syncToolButtons();
   }
   if (id < 0 && tool === 'civ') {
-    tool = 'view';
-    syncToolButtons();
+    tool = 'view'; syncToolButtons();
   }
   rebuildCivList();
   rebuildDetails();
   rebuildPaintBanner();
   updateHeaderNumbers();
 }
-
 function syncToolButtons() {
   document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
   document.querySelectorAll('.mob-tool[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
   el('biome-palette').classList.toggle('show', tool === 'biome');
   el('mobileBiomeBar').classList.toggle('show', tool === 'biome' && isMobile());
 }
-
-function setTool(t) {
-  tool = t;
-  syncToolButtons();
-  rebuildPaintBanner();
-}
+function setTool(t) { tool = t; syncToolButtons(); rebuildPaintBanner(); }
 
 let uiAcc = 0;
 function updateUINumbers() {
@@ -2008,13 +1641,9 @@ function updateUINumbers() {
   updateDetailsNumbers();
 }
 
-/* ============================================================
-   МОБИЛЬНЫЕ DRAWER-МЕНЮ
-   ============================================================ */
 const panelLeft = el('panelLeft');
 const panelRight = el('panelRight');
 const drawerOverlay = el('drawerOverlay');
-
 function openDrawer(side) {
   closeDrawers();
   if (side === 'left') panelLeft.classList.add('open');
@@ -2028,60 +1657,36 @@ function closeDrawers() {
   drawerOverlay.classList.remove('show');
   document.body.classList.remove('drawer-open');
 }
-
 el('openLeftDrawer').addEventListener('click', () => openDrawer('left'));
 el('openRightDrawer').addEventListener('click', () => openDrawer('right'));
 el('mobToolsBtn').addEventListener('click', () => openDrawer('left'));
-el('drawerOverlay').addEventListener('click', () => closeDrawers());
-document.querySelectorAll('.drawer-close').forEach(b => {
-  b.addEventListener('click', () => closeDrawers());
-});
+drawerOverlay.addEventListener('click', () => closeDrawers());
+document.querySelectorAll('.drawer-close').forEach(b => b.addEventListener('click', () => closeDrawers()));
+el('mobPlayBtn').addEventListener('click', () => togglePlay());
 
-// Плавающая кнопка play в мобильной шапке
-const mobPlayBtn = el('mobPlayBtn');
-mobPlayBtn.addEventListener('click', () => togglePlay());
-
-/* ============================================================
-   ПОЛНОЭКРАННЫЙ РЕЖИМ
-   ============================================================ */
 el('btnFullscreen').addEventListener('click', () => {
   const doc = document.documentElement;
   const isFs = document.fullscreenElement || document.webkitFullscreenElement;
   if (!isFs) {
     const req = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
     if (req) req.call(doc, { navigationUI: 'hide' }).catch(()=>{});
-    // Пытаемся заблокировать ориентацию
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('any').catch(()=>{});
-    }
+    if (screen.orientation && screen.orientation.lock) screen.orientation.lock('any').catch(()=>{});
   } else {
     const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
     if (exit) exit.call(document);
   }
 });
-document.addEventListener('fullscreenchange', () => {
-  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
-  el('btnFullscreen').textContent = isFs ? '⛶' : '⛶';
-  setTimeout(resizeCanvas, 100);
-});
-document.addEventListener('webkitfullscreenchange', () => {
-  setTimeout(resizeCanvas, 100);
-});
+document.addEventListener('fullscreenchange', () => setTimeout(resizeCanvas, 100));
+document.addEventListener('webkitfullscreenchange', () => setTimeout(resizeCanvas, 100));
 
-/* ============================================================
-   PLAY/PAUSE
-   ============================================================ */
 function togglePlay() {
   running = !running;
   el('btn-play').textContent = running ? '⏸ Пауза' : '▶ Старт';
   el('btn-play').classList.toggle('pause', running);
-  mobPlayBtn.textContent = running ? '⏸' : '▶';
-  mobPlayBtn.classList.toggle('pause', running);
+  el('mobPlayBtn').textContent = running ? '⏸' : '▶';
+  el('mobPlayBtn').classList.toggle('pause', running);
 }
 
-/* ============================================================
-   ЗУМ / ПАН
-   ============================================================ */
 function clampView() {
   const hw = COLS/(2*view.zoom), hh = ROWS/(2*view.zoom);
   view.cx = clamp(view.cx, hw, COLS-hw);
@@ -2122,12 +1727,20 @@ function screenToTile(cx, cy) {
 }
 
 /* ============================================================
-   УКАЗАТЕЛЬ / ЖЕСТЫ
+   POINTER / GESTURES
    ============================================================ */
 const pointer = { down:false, button:0, startX:0, startY:0,
                   lastClientX:0, lastClientY:0, moved:false, mode:'idle', lastTile:-1 };
 const activePointers = new Map();
 let pinchState = null;
+
+/* --- ДЕТЕКТОР ДВОЙНОГО ТАПА ---
+   Хранит время и координаты последнего тапа (только в режиме idle).
+   Если следующий тап приходит в пределах 350 мс и 40 px — он игнорируется
+   полностью: НЕ создаёт цивилизацию, НЕ меняет выделение. */
+let lastTapInfo = { t: 0, x: 0, y: 0 };
+const DOUBLE_TAP_MS = 350;
+const DOUBLE_TAP_PX = 40;
 
 function getTwoPointers() {
   const arr = [...activePointers.values()];
@@ -2136,104 +1749,71 @@ function getTwoPointers() {
 }
 
 function onPointerDown(e) {
-  // Игнорируем клики, которые попали в UI-элементы поверх канваса
   if (e.target !== canvas) return;
-
   activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-
-  // Pinch (2 пальца)
   if (activePointers.size === 2) {
-    // Отменяем текущее действие
-    pointer.down = false;
-    pointer.mode = 'idle';
+    pointer.down = false; pointer.mode = 'idle';
+    lastTapInfo = { t: 0, x: 0, y: 0 }; // Сбрасываем double-tap при pinch
     const [a,b] = getTwoPointers();
-    pinchState = {
-      dist: Math.hypot(a.x-b.x, a.y-b.y),
+    pinchState = { dist: Math.hypot(a.x-b.x, a.y-b.y),
       midX: (a.x+b.x)/2, midY: (a.y+b.y)/2,
-      zoom: view.zoom, cx: view.cx, cy: view.cy,
-    };
+      zoom: view.zoom, cx: view.cx, cy: view.cy };
     canvas.style.cursor = 'grabbing';
     return;
   }
-
   if (activePointers.size > 2) return;
-
   if (e.button === 1 || e.shiftKey) pointer.mode = 'pan';
   else if (e.button === 2) pointer.mode = 'erase';
   else if (e.button === 0) {
-    // Если armedDisaster — тап по карте разместит катастрофу
-    if (armedDisaster) { pointer.mode = 'place-disaster'; }
+    if (armedDisaster) pointer.mode = 'place-disaster';
     else if (tool === 'civ' && selectedCivId >= 0) pointer.mode = 'paint-civ';
     else if (tool === 'biome') pointer.mode = 'paint-biome';
     else if (tool === 'erase') pointer.mode = 'erase';
     else pointer.mode = 'idle';
   } else return;
-
   pointer.down = true; pointer.button = e.button;
   pointer.startX = e.clientX; pointer.startY = e.clientY;
   pointer.lastClientX = e.clientX; pointer.lastClientY = e.clientY;
   pointer.moved = false;
   pointer.lastTile = screenToTile(e.clientX, e.clientY);
-
   if (pointer.mode === 'paint-civ' && pointer.lastTile >= 0) applyBrush(pointer.lastTile, paintTileCiv);
   else if (pointer.mode === 'paint-biome' && pointer.lastTile >= 0) paintBrushBiome(pointer.lastTile);
   else if (pointer.mode === 'erase' && pointer.lastTile >= 0) applyBrush(pointer.lastTile, eraseTile);
-  // place-disaster не применяется тут — только на pointerup, чтобы не срабатывало случайно
-
   canvas.setPointerCapture(e.pointerId);
   canvas.style.cursor = pointer.mode === 'pan' ? 'grabbing' : 'crosshair';
   e.preventDefault();
 }
 
 function onPointerMove(e) {
-  if (activePointers.has(e.pointerId)) {
-    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  }
-
-  // Pinch — 2 пальца
+  if (activePointers.has(e.pointerId)) activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pinchState && activePointers.size >= 2) {
-    const two = getTwoPointers();
-    if (!two) return;
+    const two = getTwoPointers(); if (!two) return;
     const [a,b] = two;
     const dist = Math.hypot(a.x-b.x, a.y-b.y);
     const midX = (a.x+b.x)/2, midY = (a.y+b.y)/2;
-
     const scale = dist / pinchState.dist;
     const newZoom = clamp(pinchState.zoom * scale, MIN_ZOOM, MAX_ZOOM);
-
     const rect = canvas.getBoundingClientRect();
     const startMidPx = (pinchState.midX - rect.left) / rect.width;
     const startMidPy = (pinchState.midY - rect.top) / rect.height;
     const curMidPx = (midX - rect.left) / rect.width;
     const curMidPy = (midY - rect.top) / rect.height;
-
-    const ssw = COLS / pinchState.zoom;
-    const ssh = ROWS / pinchState.zoom;
-    const ssx = pinchState.cx - ssw/2;
-    const ssy = pinchState.cy - ssh/2;
+    const ssw = COLS / pinchState.zoom, ssh = ROWS / pinchState.zoom;
+    const ssx = pinchState.cx - ssw/2, ssy = pinchState.cy - ssh/2;
     const wx = ssx + startMidPx * ssw;
     const wy = ssy + startMidPy * ssh;
-
     view.zoom = newZoom;
-    const nsw = COLS / newZoom;
-    const nsh = ROWS / newZoom;
+    const nsw = COLS / newZoom, nsh = ROWS / newZoom;
     view.cx = wx - (curMidPx - 0.5) * nsw;
     view.cy = wy - (curMidPy - 0.5) * nsh;
-    clampView();
-    updateZoomUI();
-    e.preventDefault();
-    return;
+    clampView(); updateZoomUI();
+    e.preventDefault(); return;
   }
-
   if (pointer.down) {
     const dx = e.clientX - pointer.lastClientX, dy = e.clientY - pointer.lastClientY;
     const dist = Math.hypot(e.clientX - pointer.startX, e.clientY - pointer.startY);
     if (dist > 6) pointer.moved = true;
-
-    if (pointer.mode === 'idle' && pointer.moved) {
-      pointer.mode = 'pan';
-      canvas.style.cursor = 'grabbing';
-    }
+    if (pointer.mode === 'idle' && pointer.moved) { pointer.mode = 'pan'; canvas.style.cursor = 'grabbing'; }
     if (pointer.mode === 'pan') {
       const sw = COLS/view.zoom, sh = ROWS/view.zoom;
       const rect = canvas.getBoundingClientRect();
@@ -2261,42 +1841,45 @@ function onPointerMove(e) {
     pointer.lastClientX = e.clientX; pointer.lastClientY = e.clientY;
     e.preventDefault();
   }
-
-  // Обновляем hover только на desktop (на мобильном будет мешать)
-  if (!isMobile() || !pointer.down) {
-    updateHover(e.clientX, e.clientY);
-  } else {
-    // На мобильном, если держим палец — покажем последнюю позицию для "armed" индикатора
-    if (armedDisaster) {
-      hoverTile = screenToTile(e.clientX, e.clientY);
-    }
-  }
+  if (!isMobile() || !pointer.down) updateHover(e.clientX, e.clientY);
+  else if (armedDisaster) hoverTile = screenToTile(e.clientX, e.clientY);
 }
 
 function onPointerUp(e) {
   activePointers.delete(e.pointerId);
+  if (pinchState && activePointers.size < 2) pinchState = null;
+  if (!pointer.down) return;
 
-  // Закончился pinch
-  if (pinchState && activePointers.size < 2) {
-    pinchState = null;
-  }
+  const wasTap = !pointer.moved;
+  const wasIdleMode = pointer.mode === 'idle';
 
-  if (!pointer.down) {
-    return;
-  }
+  /* --- ДВОЙНОЙ ТАП — полностью игнорируем --- */
+  if (wasTap && wasIdleMode) {
+    const now = performance.now();
+    const dt = now - lastTapInfo.t;
+    const dist = Math.hypot(e.clientX - lastTapInfo.x, e.clientY - lastTapInfo.y);
+    const isDoubleTap = lastTapInfo.t > 0 && dt < DOUBLE_TAP_MS && dist < DOUBLE_TAP_PX;
 
-  // Тап (без движения) — обрабатываем выбор/размещение
-  if (!pointer.moved) {
+    if (isDoubleTap) {
+      // Сбрасываем и выходим — НЕ создаём цивилизацию и НЕ меняем выделение
+      lastTapInfo = { t: 0, x: 0, y: 0 };
+      pointer.down = false; pointer.mode = 'idle'; pointer.lastTile = -1;
+      canvas.style.cursor = 'crosshair';
+      try { canvas.releasePointerCapture(e.pointerId); } catch(_){}
+      return;
+    }
+
+    // Запоминаем первый тап
+    lastTapInfo = { t: now, x: e.clientX, y: e.clientY };
+
+    // Обрабатываем первый тап
     const i = screenToTile(e.clientX, e.clientY);
     if (i >= 0) {
-      // Размещение "armed" катастрофы
       if (armedDisaster) {
         const { wx, wy } = screenToWorld(e.clientX, e.clientY);
         spawnDisaster(armedDisaster, wx, wy);
         clearArmedDisaster();
-        return;
-      }
-      if (pointer.mode === 'idle') {
+      } else {
         const t = tiles[i];
         if (t.owner >= 0) {
           onSelectionChanged(selectedCivId === t.owner ? -1 : t.owner);
@@ -2306,41 +1889,33 @@ function onPointerUp(e) {
         }
       }
     }
+  } else {
+    // Любое другое завершение (drag, paint, armed) — сбрасываем окно dbl-tap
+    lastTapInfo = { t: 0, x: 0, y: 0 };
   }
 
   pointer.down = false; pointer.mode = 'idle'; pointer.lastTile = -1;
   canvas.style.cursor = 'crosshair';
   try { canvas.releasePointerCapture(e.pointerId); } catch(_){}
 }
-
 function onPointerCancel(e) {
   activePointers.delete(e.pointerId);
   if (pinchState && activePointers.size < 2) pinchState = null;
-  if (pointer.down) {
-    pointer.down = false; pointer.mode = 'idle'; pointer.lastTile = -1;
-    canvas.style.cursor = 'crosshair';
-  }
+  if (pointer.down) { pointer.down = false; pointer.mode = 'idle'; pointer.lastTile = -1; canvas.style.cursor = 'crosshair'; }
 }
-
 canvas.addEventListener('pointerdown', onPointerDown);
 canvas.addEventListener('pointermove', onPointerMove);
 canvas.addEventListener('pointerup', onPointerUp);
 canvas.addEventListener('pointercancel', onPointerCancel);
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
-/* ============================================================
-   TOOLTIP
-   ============================================================ */
 const tooltip = el('tooltip');
 function updateHover(cx, cy) {
   const rect = canvas.getBoundingClientRect();
-  if (cx<rect.left||cx>rect.right||cy<rect.top||cy>rect.bottom) {
-    tooltip.classList.remove('show'); hoverTile = -1; return;
-  }
+  if (cx<rect.left||cx>rect.right||cy<rect.top||cy>rect.bottom) { tooltip.classList.remove('show'); hoverTile = -1; return; }
   const i = screenToTile(cx, cy);
   if (i < 0) { tooltip.classList.remove('show'); hoverTile = -1; return; }
   hoverTile = i;
-
   const t = tiles[i];
   const owner = t.owner>=0 && civs[t.owner] && !civs[t.owner].deleted ? civs[t.owner].name : 'нейтральная';
   const ownerColor = t.owner>=0 && civs[t.owner] && !civs[t.owner].deleted ? civs[t.owner].color : '#8fa3bf';
@@ -2355,13 +1930,11 @@ function updateHover(cx, cy) {
   } else if (t.basalt) {
     lavaStr = `<br><span style="color:#94a3b8">🪨 застывший базальт</span>`;
   }
-
   tooltip.innerHTML =
     `<b>${BIOMES[t.biome].n}</b>${t.override ? ' <span style="color:#fbbf24">✎</span>' : ''}<br>` +
     `Высота: <b>${hVal}</b> · Плодородие: <b>${t.fert.toFixed(2)}</b><br>` +
     `Влажность: <b>${mVal}</b><br>` +
     `Территория: <b style="color:${ownerColor}">${owner}</b>${extra}${lavaStr}`;
-
   const sRect = stageEl.getBoundingClientRect();
   let tx = cx - sRect.left + 14, ty = cy - sRect.top + 14;
   tooltip.style.visibility = 'hidden';
@@ -2370,10 +1943,8 @@ function updateHover(cx, cy) {
   tooltip.style.visibility = '';
   if (tx + tr.width > sRect.width - 8) tx = cx - sRect.left - tr.width - 14;
   if (ty + tr.height > sRect.height - 8) ty = cy - sRect.top - tr.height - 14;
-  if (tx < 4) tx = 4;
-  if (ty < 4) ty = 4;
-  tooltip.style.left = tx+'px';
-  tooltip.style.top  = ty+'px';
+  if (tx < 4) tx = 4; if (ty < 4) ty = 4;
+  tooltip.style.left = tx+'px'; tooltip.style.top = ty+'px';
 }
 
 canvas.addEventListener('wheel', e => {
@@ -2385,9 +1956,6 @@ canvas.addEventListener('wheel', e => {
   zoomTo(view.zoom*factor, px, py);
 }, { passive: false });
 
-/* ============================================================
-   МИНИКАРТА
-   ============================================================ */
 function minimapJump(cx, cy) {
   const rect = minimapEl.getBoundingClientRect();
   const px = clamp((cx-rect.left)/rect.width, 0, 1);
@@ -2409,14 +1977,9 @@ el('minimap-wrap').addEventListener('pointerdown', e => {
   e.preventDefault();
 });
 
-/* ============================================================
-   DRAG & DROP (desktop) + armed disaster (mobile)
-   ============================================================ */
 let dragType = null, dragPreview = null;
 let armedDisaster = null;
-
 document.querySelectorAll('.disaster-btn').forEach(btn => {
-  // Desktop drag
   btn.addEventListener('dragstart', e => {
     if (isMobile()) { e.preventDefault(); return; }
     dragType = btn.dataset.disaster;
@@ -2430,30 +1993,24 @@ document.querySelectorAll('.disaster-btn').forEach(btn => {
     btn.classList.remove('dragging');
     el('drag-hint').classList.remove('show');
   });
-  // Mobile: tap to arm
   btn.addEventListener('click', () => {
     if (!isMobile()) return;
     const type = btn.dataset.disaster;
     if (armedDisaster === type) clearArmedDisaster();
     else {
       armedDisaster = type;
-      document.querySelectorAll('.disaster-btn').forEach(b => {
-        b.classList.toggle('armed', b.dataset.disaster === type);
-      });
-      addLog(`👉 Тапните по карте, чтобы разместить: ${DISASTER_TYPES[type].icon} ${DISASTER_TYPES[type].name}`);
+      document.querySelectorAll('.disaster-btn').forEach(b => b.classList.toggle('armed', b.dataset.disaster === type));
+      addLog(`👉 Тапните по карте: ${DISASTER_TYPES[type].icon} ${DISASTER_TYPES[type].name}`);
       closeDrawers();
     }
   });
 });
-
 function clearArmedDisaster() {
   armedDisaster = null;
   document.querySelectorAll('.disaster-btn').forEach(b => b.classList.remove('armed'));
 }
-
 canvas.addEventListener('dragover', e => {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'copy';
+  e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
   if (!dragType) return;
   const { wx, wy } = screenToWorld(e.clientX, e.clientY);
   dragPreview = { type: dragType, wx, wy };
@@ -2470,44 +2027,28 @@ canvas.addEventListener('drop', e => {
   dragType = null;
 });
 
-/* ============================================================
-   КНОПКИ
-   ============================================================ */
 el('btn-play').onclick = () => togglePlay();
 el('btn-step').onclick = () => { tick(); render(performance.now()); updateUINumbers(); };
 el('btn-new').onclick = () => newWorld();
 el('btn-add-civ').onclick = () => addCustomCiv();
-
 el('r-speed').oninput = e => { speed = +e.target.value; el('v-speed').textContent = speed+'×'; };
-
 let tempTO = null;
 el('r-temp').oninput = e => {
   tempLevel = +e.target.value/100;
   el('v-temp').textContent = celsiusLabel(tempLevel);
-  clearTimeout(tempTO);
-  tempTO = setTimeout(() => classifyAllBiomes(), 80);
+  clearTimeout(tempTO); tempTO = setTimeout(() => classifyAllBiomes(), 80);
 };
 let seaTO = null;
 el('r-sea').oninput = e => {
   seaLevel = +e.target.value/100;
   el('v-sea').textContent = metersLabel(seaLevel);
-  clearTimeout(seaTO);
-  seaTO = setTimeout(() => {
-    classifyAllBiomes();
-    generateRivers();
-    precomputeSubFields();
-    markTerrainFull();
+  clearTimeout(seaTO); seaTO = setTimeout(() => {
+    classifyAllBiomes(); generateRivers(); precomputeSubFields(); markTerrainFull();
   }, 80);
 };
-el('r-brush').oninput = e => {
-  brushSize = +e.target.value;
-  el('v-brush').textContent = brushSize;
-  rebuildPaintBanner();
-};
-
+el('r-brush').oninput = e => { brushSize = +e.target.value; el('v-brush').textContent = brushSize; rebuildPaintBanner(); };
 el('d-ice').onclick = () => { iceAge(); if (isMobile()) closeDrawers(); };
 el('d-flood').onclick = () => { flood(); if (isMobile()) closeDrawers(); };
-
 el('z-in').onclick = () => zoomTo(view.zoom*1.35, 0.5, 0.5);
 el('z-out').onclick = () => zoomTo(view.zoom/1.35, 0.5, 0.5);
 el('z-slider').oninput = e => {
@@ -2515,10 +2056,7 @@ el('z-slider').oninput = e => {
   const z = Math.exp(Math.log(MIN_ZOOM) + t*(Math.log(MAX_ZOOM)-Math.log(MIN_ZOOM)));
   zoomTo(z, 0.5, 0.5);
 };
-
-el('pb-close').onclick = () => {
-  onSelectionChanged(-1);
-};
+el('pb-close').onclick = () => onSelectionChanged(-1);
 
 document.querySelectorAll('.tool-btn').forEach(b => {
   b.addEventListener('click', () => {
@@ -2532,41 +2070,24 @@ document.querySelectorAll('.tool-btn').forEach(b => {
     if (isMobile() && t !== 'biome') closeDrawers();
   });
 });
-
-// Мобильный тулбар
 document.querySelectorAll('.mob-tool[data-tool]').forEach(b => {
   b.addEventListener('click', () => {
     const t = b.dataset.tool;
-    if (t === 'civ' && selectedCivId < 0) {
-      addLog('⚠️ Сначала выберите цивилизацию');
-      openDrawer('right');
-      return;
-    }
+    if (t === 'civ' && selectedCivId < 0) { addLog('⚠️ Сначала выберите цивилизацию'); openDrawer('right'); return; }
     setTool(t);
   });
 });
 
-/* ============================================================
-   ПАЛИТРА БИОМОВ
-   ============================================================ */
 function buildBiomePaletteInto(container, isMobilePalette) {
   container.innerHTML = '';
   for (const [key,b] of Object.entries(BIOMES)) {
     const rgb = `rgb(${b.c.join(',')})`;
     const item = document.createElement('div');
-    if (isMobilePalette) {
-      item.className = 'mb-item';
-      item.dataset.biome = key;
-      item.style.background = rgb;
-      item.textContent = b.icon;
-      item.title = b.n;
-    } else {
-      item.className = 'biome-item';
-      item.dataset.biome = key;
-      item.style.background = rgb;
-      item.textContent = b.icon;
-      item.title = b.n;
-    }
+    item.className = isMobilePalette ? 'mb-item' : 'biome-item';
+    item.dataset.biome = key;
+    item.style.background = rgb;
+    item.textContent = b.icon;
+    item.title = b.n;
     item.addEventListener('click', () => {
       selectedBiome = key;
       container.querySelectorAll('[data-biome]').forEach(n => n.classList.remove('active'));
@@ -2575,25 +2096,14 @@ function buildBiomePaletteInto(container, isMobilePalette) {
     });
     container.appendChild(item);
   }
-  // Auto
   const autoItem = document.createElement('div');
-  if (isMobilePalette) {
-    autoItem.className = 'mb-item';
-    autoItem.dataset.biome = 'auto';
-    autoItem.style.background = '#2a3648';
-    autoItem.style.color = '#8fa3bf';
-    autoItem.style.fontSize = '10px';
-    autoItem.textContent = 'auto';
-    autoItem.title = 'Сбросить';
-  } else {
-    autoItem.className = 'biome-item';
-    autoItem.dataset.biome = 'auto';
-    autoItem.style.background = '#2a3648';
-    autoItem.style.color = '#8fa3bf';
-    autoItem.style.fontSize = '10px';
-    autoItem.textContent = 'auto';
-    autoItem.title = 'Сбросить';
-  }
+  autoItem.className = isMobilePalette ? 'mb-item' : 'biome-item';
+  autoItem.dataset.biome = 'auto';
+  autoItem.style.background = '#2a3648';
+  autoItem.style.color = '#8fa3bf';
+  autoItem.style.fontSize = '10px';
+  autoItem.textContent = 'auto';
+  autoItem.title = 'Сбросить';
   autoItem.addEventListener('click', () => {
     selectedBiome = 'auto';
     container.querySelectorAll('[data-biome]').forEach(n => n.classList.remove('active'));
@@ -2602,20 +2112,11 @@ function buildBiomePaletteInto(container, isMobilePalette) {
   });
   container.appendChild(autoItem);
 }
+buildBiomePaletteInto(el('biome-palette'), false);
+buildBiomePaletteInto(el('mobileBiomeBar'), true);
+{ const d1 = el('biome-palette').querySelector('[data-biome="forest"]'); if (d1) d1.classList.add('active'); }
+{ const d2 = el('mobileBiomeBar').querySelector('[data-biome="forest"]'); if (d2) d2.classList.add('active'); }
 
-(function buildPalettes() {
-  buildBiomePaletteInto(el('biome-palette'), false);
-  buildBiomePaletteInto(el('mobileBiomeBar'), true);
-  // Default active
-  const def1 = el('biome-palette').querySelector('[data-biome="forest"]');
-  if (def1) def1.classList.add('active');
-  const def2 = el('mobileBiomeBar').querySelector('[data-biome="forest"]');
-  if (def2) def2.classList.add('active');
-})();
-
-/* ============================================================
-   ЛЕГЕНДА
-   ============================================================ */
 (function buildLegend() {
   const keys = ['deep','ocean','shallow','beach','desert','grass','forest','jungle','tundra','snow','mountain','peak','basalt'];
   el('legend').innerHTML = keys.map(k => {
@@ -2624,18 +2125,13 @@ function buildBiomePaletteInto(container, isMobilePalette) {
   }).join('');
 })();
 
-/* ============================================================
-   ГОРЯЧИЕ КЛАВИШИ
-   ============================================================ */
 window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === 'Escape') {
     if (armedDisaster) { clearArmedDisaster(); return; }
     if (isMobile()) { closeDrawers(); return; }
-    if (tool !== 'view') {
-      if (tool === 'civ') onSelectionChanged(-1);
-      else setTool('view');
-    } else if (selectedCivId >= 0) onSelectionChanged(-1);
+    if (tool !== 'view') { if (tool === 'civ') onSelectionChanged(-1); else setTool('view'); }
+    else if (selectedCivId >= 0) onSelectionChanged(-1);
   } else if (e.key === ' ') { e.preventDefault(); togglePlay(); }
   else if (e.key === 'n' || e.key === 'N' || e.key === 'т' || e.key === 'Т') el('btn-step').click();
   else if (e.key === 'v' || e.key === 'V' || e.key === 'м' || e.key === 'М') setTool('view');
@@ -2651,9 +2147,6 @@ window.addEventListener('keydown', e => {
   else if (e.key === 'ArrowDown')  { view.cy += ROWS/view.zoom*0.1; clampView(); }
 });
 
-/* ============================================================
-   ИГРОВОЙ ЦИКЛ
-   ============================================================ */
 let lastTs = 0, acc = 0;
 function loop(ts) {
   requestAnimationFrame(loop);
@@ -2670,15 +2163,13 @@ function loop(ts) {
   if (uiAcc > 0.15) { uiAcc = 0; updateUINumbers(); }
 }
 
-/* ============================================================
-   СТАРТ
-   ============================================================ */
 function newWorld() {
   civs = []; activeDisasters = []; activeLava.clear();
   year = 0; logEntries = [];
   selectedCivId = -1; hoverCivId = -1;
   view.cx = COLS/2; view.cy = ROWS/2; view.zoom = 1;
   clearArmedDisaster();
+  lastTapInfo = { t: 0, x: 0, y: 0 };
   setTool('view');
   renderLog();
   generate();
@@ -2694,17 +2185,11 @@ function newWorld() {
 }
 
 window.addEventListener('resize', () => { resizeCanvas(); syncToolButtons(); });
-window.addEventListener('orientationchange', () => {
-  setTimeout(() => { resizeCanvas(); syncToolButtons(); }, 200);
-});
-
-// Также пересобираем при изменении медиа-запроса
-const mqMobile = window.matchMedia('(max-width: 820px)');
-mqMobile.addEventListener('change', () => { syncToolButtons(); resizeCanvas(); });
+window.addEventListener('orientationchange', () => setTimeout(() => { resizeCanvas(); syncToolButtons(); }, 200));
+window.matchMedia('(max-width: 820px)').addEventListener('change', () => { syncToolButtons(); resizeCanvas(); });
 
 resizeCanvas();
 newWorld();
-
 requestAnimationFrame(() => {
   resizeCanvas();
   requestAnimationFrame(() => {
