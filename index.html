@@ -1,0 +1,2719 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05080f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>🌍 Симулятор Мира</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root { --bg:#05080f; --panel:rgba(16,24,40,.92); --panel-2:rgba(24,34,54,.78);
+    --border:rgba(90,130,200,.18); --border-hi:rgba(120,180,255,.45);
+    --text:#dae4f5; --dim:#7a8ba8; --accent:#4fd1c5;
+    --mobile-bar-h: 46px; --mobile-tools-h: 62px;
+  }
+  html,body { height:100%; overflow:hidden; overscroll-behavior:none; touch-action:manipulation; }
+  body { font-family:'Segoe UI','Inter',system-ui,sans-serif;
+    background:radial-gradient(ellipse at 12% 0%,#0d1e38 0%,transparent 55%),
+               radial-gradient(ellipse at 88% 100%,#1a1330 0%,transparent 55%),var(--bg);
+    color:var(--text); padding:8px; display:flex; flex-direction:column; }
+
+  /* ================= DESKTOP HEADER ================= */
+  header { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:8px 14px; background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; backdrop-filter:blur(16px); margin-bottom:8px;
+    flex:0 0 auto; box-shadow:0 4px 30px rgba(0,0,0,.4); }
+  h1 { font-size:16px; font-weight:700; letter-spacing:.4px;
+    background:linear-gradient(90deg,#5eead4,#60a5fa); -webkit-background-clip:text;
+    background-clip:text; color:transparent; white-space:nowrap; }
+  .hdr-stats { display:flex; gap:16px; flex-wrap:wrap; font-size:12px; margin-left:auto; align-items:center; }
+  .hdr-stats > div { display:flex; align-items:center; gap:5px; color:var(--dim); }
+  .hdr-stats b { color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums; font-size:13px; }
+
+  /* ================= LAYOUT ================= */
+  .layout { display:grid; grid-template-columns:236px minmax(0,1fr) 286px;
+    gap:8px; flex:1 1 auto; min-height:0; }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    backdrop-filter:blur(16px); padding:11px; display:flex; flex-direction:column;
+    gap:9px; box-shadow:0 4px 30px rgba(0,0,0,.3); overflow-y:auto; min-height:0; }
+  .panel::-webkit-scrollbar { width:5px; }
+  .panel::-webkit-scrollbar-thumb { background:rgba(110,150,210,.25); border-radius:4px; }
+
+  .panel h2 { font-size:9.5px; text-transform:uppercase; letter-spacing:1.6px;
+    color:var(--dim); font-weight:700; display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+  .panel h2::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,var(--border),transparent); }
+  .h2-row { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+  .h2-row h2 { flex:0 0 auto; } .h2-row h2::after { display:none; }
+  .h2-row .line { flex:1; height:1px; background:linear-gradient(90deg,var(--border),transparent); }
+  .icon-btn { all:unset; cursor:pointer; font-size:12px; font-weight:700; padding:3px 7px;
+    border-radius:6px; background:rgba(79,209,197,.16); color:var(--accent);
+    border:1px solid rgba(79,209,197,.3); transition:.14s; line-height:1;
+    display:flex; align-items:center; justify-content:center; min-width:22px; }
+  .icon-btn:hover { background:rgba(79,209,197,.3); transform:translateY(-1px); }
+
+  /* ================= STAGE ================= */
+  .stage { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    backdrop-filter:blur(16px); position:relative; overflow:hidden;
+    box-shadow:0 4px 40px rgba(0,0,0,.4); min-height:0; }
+  #world { position:absolute; inset:0; width:100%; height:100%; display:block;
+    background:#05080f; cursor:crosshair; touch-action:none; }
+
+  /* ================= OVERLAYS ================= */
+  .tooltip { position:absolute; pointer-events:none; background:rgba(6,12,22,.95);
+    border:1px solid var(--border-hi); padding:7px 10px; border-radius:8px;
+    font-size:11px; color:#c5d4ea; line-height:1.5; opacity:0; transition:opacity .1s;
+    z-index:20; backdrop-filter:blur(8px); box-shadow:0 4px 20px rgba(0,0,0,.6);
+    white-space:nowrap; }
+  .tooltip.show { opacity:1; } .tooltip b { color:#8fd8ff; font-weight:600; }
+
+  .minimap-wrap { position:absolute; top:10px; right:10px; width:158px; height:99px;
+    border:1px solid var(--border-hi); border-radius:8px; overflow:hidden;
+    background:#05080f; cursor:crosshair; z-index:15; box-shadow:0 4px 18px rgba(0,0,0,.5); }
+  .minimap-wrap canvas { display:block; width:100%; height:100%; }
+  .minimap-view { position:absolute; border:1.5px solid #6ee7d8;
+    box-shadow:0 0 8px rgba(110,231,216,.7),inset 0 0 8px rgba(110,231,216,.3);
+    pointer-events:none; border-radius:2px; }
+
+  .zoom-ctrl { position:absolute; right:10px; bottom:10px; display:flex; align-items:center;
+    gap:6px; background:rgba(8,14,26,.85); border:1px solid var(--border-hi);
+    padding:5px 8px; border-radius:10px; backdrop-filter:blur(10px);
+    z-index:15; box-shadow:0 4px 18px rgba(0,0,0,.5); }
+  .zoom-ctrl button { all:unset; cursor:pointer; width:24px; height:24px; display:flex;
+    align-items:center; justify-content:center; border-radius:6px; font-size:15px;
+    font-weight:700; line-height:1; background:rgba(50,80,130,.5);
+    border:1px solid rgba(110,160,230,.3); color:var(--text); }
+  .zoom-ctrl button:hover { background:rgba(70,115,180,.7); }
+  .zoom-ctrl input[type=range] { width:92px; }
+  .zoom-val { font-size:10.5px; color:var(--accent); font-weight:600; min-width:34px; text-align:center; }
+
+  .paint-banner { position:absolute; top:10px; left:50%;
+    transform:translateX(-50%) translateY(-70px);
+    background:linear-gradient(135deg,rgba(20,40,60,.96),rgba(30,50,80,.96));
+    border:1px solid var(--border-hi); padding:6px 14px; border-radius:10px;
+    font-size:11.5px; color:#c5d4ea; display:flex; align-items:center; gap:8px;
+    transition:transform .25s ease; backdrop-filter:blur(10px);
+    box-shadow:0 6px 25px rgba(0,0,0,.6); z-index:18; white-space:nowrap; max-width:90%; }
+  .paint-banner.show { transform:translateX(-50%) translateY(0); }
+  .paint-banner .swatch { width:10px; height:10px; border-radius:3px; box-shadow:0 0 8px currentColor; flex:0 0 auto; }
+  .paint-banner .close-btn { all:unset; cursor:pointer; color:#8fa3bf; font-size:14px; line-height:1; padding:0 2px; }
+  .paint-banner .close-btn:hover { color:#fff; }
+
+  .drag-hint { position:absolute; inset:0; border:2px dashed rgba(251,146,60,.8);
+    pointer-events:none; opacity:0; transition:opacity .15s; z-index:14; border-radius:12px; }
+  .drag-hint.show { opacity:1; }
+
+  /* ================= CONTROLS ================= */
+  .field { display:flex; flex-direction:column; gap:3px; }
+  .field label { font-size:11px; color:var(--dim); display:flex; justify-content:space-between; align-items:baseline; }
+  .field label span { color:var(--accent); font-variant-numeric:tabular-nums; font-weight:600; font-size:10.5px; }
+  input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:4px;
+    border-radius:3px; background:rgba(120,160,220,.18); outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px;
+    border-radius:50%; background:linear-gradient(180deg,#7fe6dc,#35b8ac); cursor:pointer;
+    box-shadow:0 0 8px rgba(79,209,197,.7),0 1px 3px rgba(0,0,0,.5); transition:transform .12s; }
+  input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.2); }
+  input[type=range]::-moz-range-thumb { width:13px; height:13px; border:none; border-radius:50%;
+    background:#4fd1c5; cursor:pointer; box-shadow:0 0 8px rgba(79,209,197,.7); }
+  button { font-family:inherit; font-size:11.5px; font-weight:600; padding:7px 9px;
+    border-radius:8px; border:1px solid rgba(110,160,230,.2);
+    background:rgba(50,80,130,.28); color:var(--text); cursor:pointer;
+    transition:.14s ease; text-align:left; display:flex; align-items:center; gap:6px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  button:hover { background:rgba(70,115,180,.45); border-color:rgba(120,190,255,.45); transform:translateY(-1px); }
+  button.primary { background:linear-gradient(135deg,#2f9e93,#3b7fd4); border-color:transparent;
+    color:#fff; justify-content:center; box-shadow:0 3px 14px rgba(59,127,212,.35); }
+  button.pause { background:linear-gradient(135deg,#b8535f,#8b3a5a) !important; }
+  .row { display:flex; gap:5px; } .row > * { flex:1; }
+  .tool-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .tool-btn { all:unset; cursor:pointer; text-align:center; padding:8px 4px;
+    font-size:15px; line-height:1; border-radius:8px;
+    background:rgba(50,80,130,.22); border:1px solid rgba(110,160,230,.18);
+    transition:.14s; color:var(--text); }
+  .tool-btn:hover { background:rgba(70,115,180,.4); transform:translateY(-1px); }
+  .tool-btn.active { background:linear-gradient(135deg,rgba(47,158,147,.55),rgba(59,127,212,.55));
+    border-color:rgba(110,231,216,.6); box-shadow:0 0 12px rgba(79,209,197,.35); }
+
+  .biome-palette { display:none; grid-template-columns:repeat(4,1fr); gap:3px; padding:6px;
+    background:var(--panel-2); border-radius:8px; border:1px solid var(--border); }
+  .biome-palette.show { display:grid; }
+  .biome-item { display:flex; align-items:center; justify-content:center; aspect-ratio:1;
+    border-radius:6px; cursor:pointer; font-size:14px; transition:.12s;
+    border:1.5px solid transparent; box-shadow:inset 0 0 0 1px rgba(0,0,0,.3); }
+  .biome-item:hover { transform:scale(1.08); border-color:rgba(255,255,255,.35); }
+  .biome-item.active { border-color:var(--accent);
+    box-shadow:0 0 10px rgba(79,209,197,.6),inset 0 0 0 1px rgba(0,0,0,.3); }
+
+  .disaster-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .disaster-btn { position:relative; justify-content:flex-start; cursor:grab;
+    padding:8px 8px 8px 22px; border-left:3px solid transparent; font-size:11px; }
+  .disaster-btn::before { content:'⠿'; position:absolute; left:6px; top:50%;
+    transform:translateY(-50%); color:var(--dim); font-size:12px; opacity:.55; }
+  .disaster-btn[data-disaster="meteor"] { border-left-color:#fb923c; }
+  .disaster-btn[data-disaster="volcano"] { border-left-color:#ef4444; }
+  .disaster-btn[data-disaster="plague"] { border-left-color:#fbbf24; }
+  .disaster-btn.armed { background:linear-gradient(135deg,rgba(251,146,60,.5),rgba(239,68,68,.5));
+    box-shadow:0 0 12px rgba(251,146,60,.45); }
+  .disaster-instant { grid-column:span 2; }
+
+  .civ-list { display:flex; flex-direction:column; gap:4px; max-height:240px;
+    overflow-y:auto; padding-right:2px; flex:0 0 auto; }
+  .civ { display:flex; align-items:center; gap:7px; font-size:11.5px;
+    padding:6px 6px 6px 8px; border-radius:8px;
+    background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.04);
+    cursor:pointer; transition:.12s; user-select:none; position:relative; }
+  .civ:hover { background:rgba(100,150,220,.14); border-color:rgba(120,180,255,.28); }
+  .civ.selected { background:rgba(79,209,197,.18); border-color:rgba(79,209,197,.6);
+    box-shadow:0 0 0 1px rgba(79,209,197,.35); }
+  .civ.dead { opacity:.28; }
+  .dot { width:11px; height:11px; border-radius:3px; flex:0 0 auto; box-shadow:0 0 6px currentColor; }
+  .civ .nm { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+  .civ .num { color:var(--dim); font-variant-numeric:tabular-nums; font-size:10.5px; min-width:24px; text-align:right; }
+  .civ .paint-icon { font-size:10px; color:var(--accent); opacity:0; transition:opacity .15s; }
+  .civ.selected .paint-icon { opacity:1; }
+  .civ-del { all:unset; cursor:pointer; width:16px; height:16px; display:flex;
+    align-items:center; justify-content:center; border-radius:4px;
+    color:#6b7d99; font-size:11px; line-height:1; opacity:0;
+    transition:opacity .15s,color .15s,background .15s; flex:0 0 auto; }
+  .civ:hover .civ-del { opacity:1; }
+  .civ-del:hover { color:#ff6b6b; background:rgba(255,107,107,.18); }
+
+  .details { background:var(--panel-2); border:1px solid var(--border); border-radius:10px;
+    padding:10px; font-size:11.5px; display:none; flex-direction:column; gap:5px; flex:0 0 auto; }
+  .details.show { display:flex; }
+  .details .d-header { display:flex; align-items:center; gap:8px; margin-bottom:3px;
+    padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .details .d-header .d-name { font-weight:600; font-size:13px; flex:1;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .details .d-row { display:flex; justify-content:space-between; color:var(--dim); }
+  .details .d-row b { color:var(--text); font-weight:600; font-variant-numeric:tabular-nums; }
+  .details .hint-paint { margin-top:5px; padding-top:6px; border-top:1px dashed var(--border);
+    color:var(--accent); font-size:10.5px; line-height:1.4; }
+
+  .log { font-size:10.5px; line-height:1.5; max-height:200px; min-height:60px;
+    overflow-y:auto; display:flex; flex-direction:column-reverse;
+    gap:2px; padding-right:2px; flex:1 1 auto; }
+  .log div { color:#9fb2cc; padding:3px 7px; border-radius:6px;
+    background:rgba(255,255,255,.025); border-left:2px solid transparent; flex:0 0 auto; }
+  .log .yr { color:#556c90; font-variant-numeric:tabular-nums; font-weight:600; margin-right:3px; }
+
+  .legend { display:grid; grid-template-columns:1fr 1fr; gap:2px 8px; font-size:9.5px;
+    color:var(--dim); flex:0 0 auto; }
+  .legend > div { display:flex; align-items:center; gap:5px; padding:1px 3px; border-radius:4px; }
+  .legend i { display:block; width:9px; height:9px; border-radius:2px; flex:0 0 auto;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.25); }
+
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-thumb { background:rgba(110,150,210,.25); border-radius:4px; }
+
+  /* ====================================================
+     MOBILE ELEMENTS (hidden by default)
+     ==================================================== */
+  .mobile-bar, .mobile-tools, .mobile-biome-bar, .drawer-overlay, .drawer-close {
+    display: none;
+  }
+
+  /* ====================================================
+     MOBILE LAYOUT — up to 820px width OR coarse pointer
+     ==================================================== */
+  @media (max-width: 820px) {
+    body {
+      padding: 0;
+      overflow: hidden;
+    }
+    header { display: none; }
+
+    .layout {
+      display: block;
+      position: fixed;
+      inset: 0;
+      padding: 0;
+      gap: 0;
+    }
+
+    /* --- STAGE FULLSCREEN --- */
+    .stage {
+      position: fixed;
+      top: calc(var(--mobile-bar-h) + env(safe-area-inset-top, 0px));
+      left: 0;
+      right: 0;
+      bottom: calc(var(--mobile-tools-h) + env(safe-area-inset-bottom, 0px));
+      border-radius: 0;
+      border: none;
+      z-index: 1;
+    }
+
+    /* --- PANELS AS DRAWERS --- */
+    .panel {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 90%;
+      max-width: 380px;
+      z-index: 300;
+      border-radius: 0;
+      padding-top: calc(56px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      transition: transform .3s cubic-bezier(.25,.8,.25,1);
+      box-shadow: 0 0 40px rgba(0,0,0,.75);
+      overscroll-behavior: contain;
+    }
+    .panel.left { left: 0; transform: translateX(-105%); }
+    .panel.right { right: 0; transform: translateX(105%); }
+    .panel.open { transform: translateX(0); }
+
+    /* Add extra mobile-only blocks inside drawers */
+    .mobile-only-block { display: flex !important; }
+
+    /* --- MOBILE TOP BAR --- */
+    .mobile-bar {
+      display: flex;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: calc(var(--mobile-bar-h) + env(safe-area-inset-top, 0px));
+      padding: 4px 8px;
+      padding-top: calc(4px + env(safe-area-inset-top, 0px));
+      z-index: 100;
+      background: rgba(12, 18, 32, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mob-btn {
+      all: unset;
+      cursor: pointer;
+      width: 40px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      background: rgba(50, 80, 130, 0.35);
+      border: 1px solid rgba(110, 160, 230, 0.25);
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1;
+      transition: .12s;
+      flex: 0 0 auto;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mob-btn:active {
+      background: rgba(70, 115, 180, 0.6);
+      transform: scale(0.94);
+    }
+    .mob-btn.accent {
+      background: linear-gradient(135deg, #2f9e93, #3b7fd4);
+      border-color: transparent;
+      color: #fff;
+    }
+    .mob-btn.accent.pause {
+      background: linear-gradient(135deg, #b8535f, #8b3a5a);
+    }
+
+    .mob-stats {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      font-size: 12.5px;
+      color: var(--dim);
+      min-width: 0;
+      overflow: hidden;
+    }
+    .mob-stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .mob-stats b {
+      color: var(--accent);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      font-size: 13.5px;
+    }
+
+    /* --- MOBILE BOTTOM TOOLBAR --- */
+    .mobile-tools {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--mobile-tools-h) + env(safe-area-inset-bottom, 0px));
+      padding: 6px 6px;
+      padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+      z-index: 100;
+      background: rgba(12, 18, 32, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      gap: 5px;
+    }
+
+    .mob-tool {
+      all: unset;
+      cursor: pointer;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      border-radius: 10px;
+      background: rgba(50, 80, 130, 0.22);
+      border: 1px solid rgba(110, 160, 230, 0.15);
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1;
+      transition: .12s;
+      padding: 4px 2px;
+      min-width: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mob-tool span {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--dim);
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+    .mob-tool:active {
+      background: rgba(70, 115, 180, 0.55);
+      transform: scale(0.95);
+    }
+    .mob-tool.active {
+      background: linear-gradient(135deg, rgba(47, 158, 147, 0.7), rgba(59, 127, 212, 0.7));
+      border-color: rgba(110, 231, 216, 0.6);
+      box-shadow: 0 0 12px rgba(79, 209, 197, 0.35);
+    }
+    .mob-tool.active span { color: #fff; }
+    .mob-tool.accent {
+      background: linear-gradient(135deg, #2f9e93, #3b7fd4);
+      border-color: transparent;
+    }
+    .mob-tool.accent span { color: #fff; }
+    .mob-tool.accent.pause {
+      background: linear-gradient(135deg, #b8535f, #8b3a5a);
+    }
+
+    /* --- MOBILE BIOME BAR --- */
+    .mobile-biome-bar {
+      position: fixed;
+      bottom: calc(var(--mobile-tools-h) + env(safe-area-inset-bottom, 0px) + 6px);
+      left: 6px;
+      right: 6px;
+      z-index: 95;
+      background: rgba(12, 18, 32, 0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-hi);
+      border-radius: 10px;
+      padding: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.6);
+      transform: translateY(120%);
+      transition: transform .25s cubic-bezier(.25,.8,.25,1);
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .mobile-biome-bar::-webkit-scrollbar { display: none; }
+    .mobile-biome-bar.show {
+      display: flex !important;
+      transform: translateY(0);
+    }
+    .mobile-biome-bar .mb-item {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      margin-right: 5px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+      transition: .12s;
+      user-select: none;
+    }
+    .mobile-biome-bar .mb-item:active { transform: scale(0.92); }
+    .mobile-biome-bar .mb-item.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(79, 209, 197, 0.7), inset 0 0 0 1px rgba(0,0,0,.35);
+    }
+
+    /* --- DRAWER OVERLAY --- */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 250;
+      opacity: 0;
+      transition: opacity .25s;
+      pointer-events: none;
+    }
+    .drawer-overlay.show {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* --- CLOSE BUTTONS INSIDE DRAWERS --- */
+    .drawer-close {
+      display: flex;
+      position: absolute;
+      top: calc(12px + env(safe-area-inset-top, 0px));
+      right: 12px;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(50, 80, 130, 0.5);
+      border: 1px solid rgba(110, 160, 230, 0.3);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 1;
+    }
+    .drawer-close:active { background: rgba(70, 115, 180, 0.7); transform: scale(0.94); }
+
+    /* --- MINIMAP: smaller on mobile --- */
+    .minimap-wrap {
+      top: 8px;
+      right: 8px;
+      width: 110px;
+      height: 69px;
+    }
+
+    /* --- ZOOM CTRL: vertical on mobile --- */
+    .zoom-ctrl {
+      right: 8px;
+      bottom: 8px;
+      flex-direction: column;
+      padding: 4px;
+      gap: 4px;
+      background: rgba(8, 14, 26, 0.85);
+    }
+    .zoom-ctrl input[type=range] {
+      display: none;
+    }
+    .zoom-ctrl button {
+      width: 34px;
+      height: 34px;
+      font-size: 18px;
+    }
+    .zoom-val {
+      font-size: 10px;
+      min-width: auto;
+      padding: 2px 0;
+    }
+
+    /* --- Bigger touch targets in drawers --- */
+    .panel button,
+    .panel .icon-btn {
+      min-height: 38px;
+      padding: 9px 11px;
+      font-size: 12.5px;
+    }
+    .panel .civ {
+      min-height: 40px;
+      padding: 8px 10px;
+    }
+    .panel .civ-del {
+      width: 26px;
+      height: 26px;
+      opacity: 1;
+      color: #8ba0bd;
+    }
+    .panel .tool-btn {
+      padding: 12px 6px;
+      font-size: 20px;
+    }
+    .panel .biome-item {
+      font-size: 18px;
+    }
+
+    /* When mobile bar / tools open, prevent scroll behind */
+    body.drawer-open { overflow: hidden; }
+  }
+
+  /* Super-narrow phones */
+  @media (max-width: 360px) {
+    .mob-stats { font-size: 11px; gap: 8px; }
+    .mob-stats b { font-size: 12px; }
+    .mob-btn { width: 36px; height: 34px; font-size: 16px; }
+    .mob-tool { font-size: 16px; }
+    .mob-tool span { font-size: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ DESKTOP HEADER ============ -->
+<header>
+  <h1>🌍 Симулятор Мира</h1>
+  <div class="hdr-stats">
+    <div>📅 Год <b id="s-year">0</b></div>
+    <div>👥 Цив. <b id="s-civs">0</b></div>
+    <div>🧬 Население <b id="s-pop">0</b></div>
+    <div>🗺️ Заселено <b id="s-land">0%</b></div>
+    <div>🔍 <b id="s-zoom">1.0×</b></div>
+  </div>
+</header>
+
+<!-- ============ MOBILE TOP BAR ============ -->
+<div class="mobile-bar" id="mobileBar">
+  <button class="mob-btn" id="openLeftDrawer" title="Меню">☰</button>
+  <div class="mob-stats">
+    <span>📅 <b id="mob-year">0</b></span>
+    <span>🧬 <b id="mob-pop">0</b></span>
+  </div>
+  <button class="mob-btn accent" id="mobPlayBtn" title="Старт/Пауза">▶</button>
+  <button class="mob-btn" id="openRightDrawer" title="Государства">👥</button>
+  <button class="mob-btn" id="btnFullscreen" title="На весь экран">⛶</button>
+</div>
+
+<!-- ============ LAYOUT ============ -->
+<div class="layout">
+
+  <!-- LEFT PANEL (drawer on mobile) -->
+  <aside class="panel left" id="panelLeft">
+    <button class="drawer-close" data-close="left">✕</button>
+
+    <h2>Время</h2>
+    <div class="row">
+      <button id="btn-play" class="primary">▶ Старт</button>
+      <button id="btn-step" title="Шаг (N)">⏭</button>
+    </div>
+    <div class="field">
+      <label>Скорость <span id="v-speed">8×</span></label>
+      <input type="range" id="r-speed" min="1" max="40" value="8">
+    </div>
+    <div class="row"><button id="btn-new">🌀 Новый мир</button></div>
+
+    <h2>Климат</h2>
+    <div class="field">
+      <label>🌡️ Температура <span id="v-temp">+15°C</span></label>
+      <input type="range" id="r-temp" min="30" max="115" value="85">
+    </div>
+    <div class="field">
+      <label>🌊 Уровень океана <span id="v-sea">0 м</span></label>
+      <input type="range" id="r-sea" min="25" max="75" value="45">
+    </div>
+
+    <h2>Инструменты</h2>
+    <div class="tool-grid">
+      <button class="tool-btn active" data-tool="view" title="Просмотр (V)">👁</button>
+      <button class="tool-btn" data-tool="civ" title="Расселение (C)">👥</button>
+      <button class="tool-btn" data-tool="biome" title="Кисть биома (B)">🎨</button>
+      <button class="tool-btn" data-tool="erase" title="Ластик (E)">🧽</button>
+    </div>
+    <div class="field">
+      <label>Размер кисти <span id="v-brush">1</span></label>
+      <input type="range" id="r-brush" min="1" max="6" value="1">
+    </div>
+    <div class="biome-palette" id="biome-palette"></div>
+
+    <h2>Катастрофы <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0;font-size:9px;margin-left:auto">тап → тап по карте</span></h2>
+    <div class="disaster-grid">
+      <button class="disaster-btn" draggable="true" data-disaster="meteor">☄️ Метеор</button>
+      <button class="disaster-btn" draggable="true" data-disaster="volcano">🌋 Вулкан</button>
+      <button class="disaster-btn" draggable="true" data-disaster="plague">🦠 Чума</button>
+      <button class="disaster-instant" id="d-ice">🧊 Ледниковый период</button>
+      <button class="disaster-instant" id="d-flood">🌊 Всемирный потоп</button>
+    </div>
+
+    <h2>Легенда биомов</h2>
+    <div class="legend" id="legend"></div>
+  </aside>
+
+  <!-- STAGE -->
+  <main class="stage" id="stage">
+    <canvas id="world"></canvas>
+    <div class="drag-hint" id="drag-hint"></div>
+    <div class="tooltip" id="tooltip"></div>
+
+    <div class="minimap-wrap" id="minimap-wrap">
+      <canvas id="minimap" width="160" height="100"></canvas>
+      <div class="minimap-view" id="minimap-view"></div>
+    </div>
+
+    <div class="zoom-ctrl">
+      <button id="z-out" title="Отдалить">−</button>
+      <input type="range" id="z-slider" min="0" max="1000" value="0">
+      <button id="z-in" title="Приблизить">+</button>
+      <div class="zoom-val" id="z-val">1.0×</div>
+    </div>
+
+    <div class="paint-banner" id="paint-banner">
+      <span class="swatch" id="pb-swatch"></span>
+      <span id="pb-text">Режим</span>
+      <button class="close-btn" id="pb-close" title="Esc">✕</button>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL (drawer on mobile) -->
+  <aside class="panel right" id="panelRight">
+    <button class="drawer-close" data-close="right">✕</button>
+
+    <div class="h2-row">
+      <h2>Государства</h2>
+      <div class="line"></div>
+      <button class="icon-btn" id="btn-add-civ" title="Добавить цивилизацию">➕</button>
+    </div>
+    <div class="civ-list" id="civ-list"></div>
+    <div class="details" id="details"></div>
+
+    <h2>Хроника</h2>
+    <div class="log" id="log"></div>
+  </aside>
+</div>
+
+<!-- ============ MOBILE BIOME BAR ============ -->
+<div class="mobile-biome-bar" id="mobileBiomeBar"></div>
+
+<!-- ============ MOBILE TOOLBAR ============ -->
+<div class="mobile-tools" id="mobileTools">
+  <button class="mob-tool active" data-tool="view">👁<span>Вид</span></button>
+  <button class="mob-tool" data-tool="civ">👥<span>Цив.</span></button>
+  <button class="mob-tool" data-tool="biome">🎨<span>Биом</span></button>
+  <button class="mob-tool" data-tool="erase">🧽<span>Стереть</span></button>
+  <button class="mob-tool" id="mobToolsBtn">⚙<span>Ещё</span></button>
+</div>
+
+<!-- ============ DRAWER OVERLAY ============ -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<script>
+'use strict';
+/* ============================================================
+   КОНСТАНТЫ
+   ============================================================ */
+const COLS = 160, ROWS = 100;
+const SUB = 8;
+const W = COLS * SUB, H = ROWS * SUB;
+const MIN_ZOOM = 1, MAX_ZOOM = 10;
+const DEFAULT_CIVS = 3;
+const MAX_CIVS = 15;
+
+const BIOMES = {
+  deep:     { c:[8,26,58],      f:0.00, n:'Глубина',    icon:'🌊' },
+  ocean:    { c:[20,58,108],    f:0.00, n:'Океан',      icon:'🌊' },
+  shallow:  { c:[58,118,158],   f:0.00, n:'Мелководье', icon:'💧' },
+  beach:    { c:[218,202,150],  f:0.30, n:'Побережье',  icon:'🏖️' },
+  desert:   { c:[216,184,122],  f:0.10, n:'Пустыня',    icon:'🏜️' },
+  grass:    { c:[138,176,94],   f:0.75, n:'Луга',       icon:'🌾' },
+  forest:   { c:[64,120,60],    f:1.00, n:'Лес',        icon:'🌲' },
+  jungle:   { c:[36,98,52],     f:0.85, n:'Джунгли',    icon:'🌴' },
+  tundra:   { c:[158,172,168],  f:0.18, n:'Тундра',     icon:'🍂' },
+  snow:     { c:[234,242,250],  f:0.05, n:'Снега',      icon:'❄️' },
+  mountain: { c:[124,122,118],  f:0.12, n:'Горы',       icon:'⛰️' },
+  peak:     { c:[216,220,224],  f:0.02, n:'Вершины',    icon:'🏔️' },
+  basalt:   { c:[58,54,52],     f:0.05, n:'Базальт',    icon:'🪨' },
+};
+const WATER_BIOMES = new Set(['deep','ocean','shallow']);
+
+const CIV_NAMES = ['Аврора','Валория','Тирион','Нордхейм','Солярия','Аквилон','Зардан',
+  'Кельдор','Мираж','Орион','Тартария','Эльдар','Пангея','Гелиос','Аркадия',
+  'Феникс','Кристалл','Доминион','Валгалла','Немезида','Эфирия','Корвус'];
+const CIV_COLORS = ['#ff5c5c','#4da3ff','#ffd166','#b06ef5','#22d68f',
+  '#ff8b3d','#ff6ec7','#5ce1e6','#c9f24d','#c08a52',
+  '#8fa8ff','#ff9aa2','#a3e635','#f472b6','#38bdf8'];
+
+const DISASTER_TYPES = {
+  meteor:  { name:'Метеорит', icon:'☄️', color:'#fb923c', rgb:[251,146,60],
+             duration:12, initialRadius:1.2, growthRate:0.75, maxRadius:14, kind:'terrain' },
+  volcano: { name:'Вулкан',   icon:'🌋', color:'#ef4444', rgb:[239,68,68],
+             duration:26, initialRadius:1.0, growthRate:0.5,  maxRadius:12, kind:'terrain' },
+  plague:  { name:'Пандемия', icon:'🦠', color:'#fbbf24', rgb:[251,191,36],
+             duration:32, initialRadius:2.0, growthRate:0.85, maxRadius:40, kind:'civ' },
+};
+
+const LAVA_COOL_RATE = 0.0055;
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp = (a,b,t) => a+(b-a)*t;
+const clampI = (v,a,b) => v<a?a:v>b?b:v;
+const el = id => document.getElementById(id);
+const isMobile = () => window.matchMedia('(max-width: 820px)').matches;
+
+function hexToRgb(h) {
+  return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+}
+function hash2i(x,y) {
+  let h = (x*374761393 + y*668265263)|0;
+  h = ((h ^ (h>>13)) * 1274126177)|0;
+  return ((h ^ (h>>16)) & 0x7fffffff) / 0x7fffffff;
+}
+function smoothstep(e0,e1,x) {
+  const t = clamp((x-e0)/(e1-e0),0,1);
+  return t*t*(3-2*t);
+}
+
+/* ============================================================
+   ШУМ
+   ============================================================ */
+function coarse(scale, pad) {
+  pad = pad||4;
+  const gw = Math.ceil(COLS/scale) + pad*2 + 3;
+  const gh = Math.ceil(ROWS/scale) + pad*2 + 3;
+  const g = new Float32Array(gw*gh);
+  for (let i=0;i<g.length;i++) g[i] = Math.random();
+  return { g, gw, gh, scale, pad };
+}
+function sampleCoarse(c,x,y) {
+  const fx = x/c.scale + c.pad + 1;
+  const fy = y/c.scale + c.pad + 1;
+  const x0 = Math.floor(fx), y0 = Math.floor(fy);
+  const tx = fx-x0, ty = fy-y0;
+  const sx = tx*tx*(3-2*tx), sy = ty*ty*(3-2*ty);
+  const gw = c.gw, gh = c.gh;
+  const xc0 = clampI(x0,0,gw-1), xc1 = clampI(x0+1,0,gw-1);
+  const yc0 = clampI(y0,0,gh-1), yc1 = clampI(y0+1,0,gh-1);
+  const g = c.g;
+  const a = g[yc0*gw+xc0], b = g[yc0*gw+xc1];
+  const d = g[yc1*gw+xc0], e = g[yc1*gw+xc1];
+  return (a*(1-sx)+b*sx)*(1-sy) + (d*(1-sx)+e*sx)*sy;
+}
+function sampleField(field,x,y) {
+  x = clamp(x,0,COLS-1.0001); y = clamp(y,0,ROWS-1.0001);
+  const x0 = Math.floor(x), y0 = Math.floor(y);
+  const x1 = Math.min(COLS-1,x0+1), y1 = Math.min(ROWS-1,y0+1);
+  const tx = x-x0, ty = y-y0;
+  const a = field[y0*COLS+x0], b = field[y0*COLS+x1];
+  const c = field[y1*COLS+x0], d = field[y1*COLS+x1];
+  return (a*(1-tx)+b*tx)*(1-ty) + (c*(1-tx)+d*tx)*ty;
+}
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+const stageEl = el('stage');
+const canvas  = el('world');
+const ctx     = canvas.getContext('2d');
+
+const terrainCanvas = document.createElement('canvas');
+terrainCanvas.width = W; terrainCanvas.height = H;
+const terrainCtx = terrainCanvas.getContext('2d');
+const terrainImg = terrainCtx.createImageData(W, H);
+
+const civCanvas = document.createElement('canvas');
+civCanvas.width = W; civCanvas.height = H;
+const civCtx = civCanvas.getContext('2d');
+const civImg = civCtx.createImageData(W, H);
+
+let tiles = [];
+let rivers = [];
+let heightsSub = null;
+let moistSub = null;
+
+let civs = [];
+let activeDisasters = [];
+let activeLava = new Set();
+let year = 0, running = false, speed = 8;
+let seaLevel = 0.45, tempLevel = 0.85;
+let logEntries = [];
+let selectedCivId = -1, hoverCivId = -1, hoverTile = -1;
+let frameTime = 0;
+let tool = 'view', selectedBiome = 'forest', brushSize = 1;
+const view = { cx: COLS/2, cy: ROWS/2, zoom: 1 };
+
+let terrainDirtyRect = null;
+let overlayDirtyRect = null;
+
+function markTerrainDirtyTile(tx,ty) {
+  tx = clampI(tx|0, 0, COLS-1); ty = clampI(ty|0, 0, ROWS-1);
+  if (!terrainDirtyRect) terrainDirtyRect = {x0:tx,y0:ty,x1:tx,y1:ty};
+  else {
+    if (tx < terrainDirtyRect.x0) terrainDirtyRect.x0 = tx;
+    if (ty < terrainDirtyRect.y0) terrainDirtyRect.y0 = ty;
+    if (tx > terrainDirtyRect.x1) terrainDirtyRect.x1 = tx;
+    if (ty > terrainDirtyRect.y1) terrainDirtyRect.y1 = ty;
+  }
+}
+function markTerrainFull() { terrainDirtyRect = {x0:0,y0:0,x1:COLS-1,y1:ROWS-1}; }
+function markOverlayDirtyTile(tx,ty) {
+  tx = clampI(tx|0, 0, COLS-1); ty = clampI(ty|0, 0, ROWS-1);
+  if (!overlayDirtyRect) overlayDirtyRect = {x0:tx,y0:ty,x1:tx,y1:ty};
+  else {
+    if (tx < overlayDirtyRect.x0) overlayDirtyRect.x0 = tx;
+    if (ty < overlayDirtyRect.y0) overlayDirtyRect.y0 = ty;
+    if (tx > overlayDirtyRect.x1) overlayDirtyRect.x1 = tx;
+    if (ty > overlayDirtyRect.y1) overlayDirtyRect.y1 = ty;
+  }
+}
+function markOverlayFull() { overlayDirtyRect = {x0:0,y0:0,x1:COLS-1,y1:ROWS-1}; }
+
+/* ============================================================
+   КОНВЕРТАЦИЯ
+   ============================================================ */
+const tempToCelsius = t => -20 + (t-0.30)/0.85*60;
+const celsiusLabel  = t => { const c = Math.round(tempToCelsius(t)); return (c>=0?'+':'')+c+'°C'; };
+const seaToMeters   = s => Math.round((s-0.45)*1500);
+const metersLabel   = s => { const m = seaToMeters(s); return (m>0?'+':'')+m+' м'; };
+
+/* ============================================================
+   ГЕНЕРАЦИЯ
+   ============================================================ */
+function generate() {
+  const warpX = coarse(24,6), warpY = coarse(24,6);
+  const contA = coarse(36,6), contB = coarse(18,6);
+  const contC = coarse(9,6), contD = coarse(4.5,6), contE = coarse(2.2,6);
+  const ridgeA = coarse(12,7), ridgeB = coarse(6,7), ridgeC = coarse(3,7);
+  const moistA = coarse(22,6), moistB = coarse(11,6), moistC = coarse(5.5,6);
+
+  const warpAmp = 11;
+  const rawH = new Float32Array(COLS*ROWS);
+  let mn = Infinity, mx = -Infinity;
+
+  for (let y=0;y<ROWS;y++) {
+    for (let x=0;x<COLS;x++) {
+      const wx = (sampleCoarse(warpX,x,y)-0.5)*2*warpAmp;
+      const wy = (sampleCoarse(warpY,x,y)-0.5)*2*warpAmp;
+      const px = x+wx, py = y+wy;
+
+      let cont = 0.38*sampleCoarse(contA,px,py)
+               + 0.26*sampleCoarse(contB,px,py)
+               + 0.18*sampleCoarse(contC,px,py)
+               + 0.12*sampleCoarse(contD,px,py)
+               + 0.06*sampleCoarse(contE,px*1.4,py*1.4);
+
+      const dx = (x/(COLS-1)-0.5)*2;
+      const dy = (y/(ROWS-1)-0.5)*2;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      cont -= Math.max(0,dist-0.54)*1.4;
+      cont += (Math.random()-0.5)*0.006;
+
+      let ridge = 0, amp = 1, sum = 0;
+      ridge += (1-Math.abs(2*sampleCoarse(ridgeA,px*1.25,py*1.25)-1))*amp; sum += amp; amp *= 0.55;
+      ridge += (1-Math.abs(2*sampleCoarse(ridgeB,px*1.25,py*1.25)-1))*amp; sum += amp; amp *= 0.55;
+      ridge += (1-Math.abs(2*sampleCoarse(ridgeC,px*1.25,py*1.25)-1))*amp; sum += amp;
+      ridge /= sum;
+
+      const contClamped = clamp(cont,0,1);
+      const mountainMask = smoothstep(0.40,0.72,contClamped);
+      const ridgeBoost = ridge*mountainMask*0.42;
+      const hills = (sampleCoarse(contD,px*3,py*3)-0.5)*0.055*smoothstep(0.35,0.7,contClamped);
+
+      const h = contClamped*0.82 + ridgeBoost + hills;
+      rawH[y*COLS+x] = h;
+      if (isFinite(h)) { if (h<mn) mn=h; if (h>mx) mx=h; }
+    }
+  }
+
+  if (!isFinite(mn)||!isFinite(mx)) { mn=0; mx=1; }
+  const range = (mx-mn)||1;
+
+  tiles = new Array(COLS*ROWS);
+  for (let y=0;y<ROWS;y++) {
+    for (let x=0;x<COLS;x++) {
+      const i = y*COLS+x;
+      let h = (rawH[i]-mn)/range;
+      if (!isFinite(h)||h<0) h=0; if (h>1) h=1;
+      h = Math.pow(h,1.06);
+      let moist = clamp(
+        0.50*sampleCoarse(moistA,x,y) +
+        0.30*sampleCoarse(moistB,x,y) +
+        0.20*sampleCoarse(moistC,x,y), 0, 1);
+      if (!isFinite(moist)) moist = 0.5;
+      tiles[i] = {
+        h, moist, biome:'deep', owner:-1, fert:0, land:false,
+        override:null, lava:0, basalt:false,
+      };
+    }
+  }
+  for (let i=0;i<tiles.length;i++) {
+    if (!isFinite(tiles[i].h))     tiles[i].h = 0.5;
+    if (!isFinite(tiles[i].moist)) tiles[i].moist = 0.5;
+  }
+  generateRivers();
+  precomputeSubFields();
+  classifyAllBiomes();
+  markTerrainFull();
+  markOverlayFull();
+}
+
+function generateRivers() {
+  rivers = [];
+  const sources = [];
+  for (let i=0;i<tiles.length;i++)
+    if (tiles[i].h > seaLevel + 0.28) sources.push(i);
+  sources.sort((a,b) => tiles[b].h - tiles[a].h);
+
+  const targetCount = 36;
+  let made = 0;
+  for (let a=0; a<1100 && made<targetCount && sources.length; a++) {
+    const start = sources[Math.floor(Math.random()*Math.min(sources.length,90))];
+    const path = [start];
+    let cur = start;
+    const visited = new Set([cur]);
+    for (let step=0; step<350; step++) {
+      const x = cur%COLS, y = (cur/COLS)|0;
+      let lowest = -1, lowestH = tiles[cur].h;
+      for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) {
+        if (!dx && !dy) continue;
+        const nx = x+dx, ny = y+dy;
+        if (nx<0||ny<0||nx>=COLS||ny>=ROWS) continue;
+        const ni = ny*COLS+nx;
+        if (visited.has(ni)) continue;
+        if (tiles[ni].h < lowestH-0.0015) { lowestH = tiles[ni].h; lowest = ni; }
+      }
+      if (lowest === -1) break;
+      cur = lowest; visited.add(cur); path.push(cur);
+      if (!tiles[cur].land || tiles[cur].h < seaLevel) break;
+    }
+    if (path.length > 6) { rivers.push(path); made++; }
+  }
+}
+
+function precomputeSubFields() {
+  if (!heightsSub) heightsSub = new Float32Array(W*H);
+  if (!moistSub)   moistSub   = new Float32Array(W*H);
+  const hf = new Float32Array(COLS*ROWS);
+  const mf = new Float32Array(COLS*ROWS);
+  for (let i=0;i<tiles.length;i++) {
+    hf[i] = isFinite(tiles[i].h) ? tiles[i].h : 0.5;
+    mf[i] = isFinite(tiles[i].moist) ? tiles[i].moist : 0.5;
+  }
+  for (let py=0; py<H; py++) {
+    const ty = (py+0.5)/SUB - 0.5;
+    const row = py*W;
+    for (let px=0; px<W; px++) {
+      const tx = (px+0.5)/SUB - 0.5;
+      const idx = row+px;
+      let hv = sampleField(hf,tx,ty);
+      let mv = sampleField(mf,tx,ty);
+      if (!isFinite(hv)) hv = 0.5;
+      if (!isFinite(mv)) mv = 0.5;
+      heightsSub[idx] = hv;
+      moistSub[idx]   = mv;
+    }
+  }
+}
+
+function classifyTile(i) {
+  const t = tiles[i];
+  const y = (i/COLS)|0;
+  const lat = Math.abs(y/(ROWS-1)-0.5)*2;
+  const tempBase = clamp(tempLevel*(1-lat*lat*0.88),0,1);
+  const temp = tempBase*(1-((t.h-seaLevel)/Math.max(0.001,1-seaLevel))*0.5);
+
+  let b;
+  if (t.override && BIOMES[t.override]) b = t.override;
+  else if (t.basalt)                    b = 'basalt';
+  else if (t.h < seaLevel-0.06)         b = 'deep';
+  else if (t.h < seaLevel-0.012)        b = 'ocean';
+  else if (t.h < seaLevel)              b = 'shallow';
+  else {
+    const e = (t.h-seaLevel)/Math.max(0.001,1-seaLevel);
+    if (e > 0.62)             b = temp<0.26 ? 'peak' : 'mountain';
+    else if (temp < 0.12)     b = 'snow';
+    else if (temp < 0.28)     b = 'tundra';
+    else if (t.moist < 0.26)  b = 'desert';
+    else if (t.moist < 0.44)  b = 'grass';
+    else if (temp > 0.68 && t.moist > 0.56) b = 'jungle';
+    else                      b = 'forest';
+    if (e < 0.022 && b !== 'snow' && b !== 'peak' && b !== 'mountain') b = 'beach';
+  }
+
+  t.biome = b;
+  t.land = !WATER_BIOMES.has(b);
+  t.fert = BIOMES[b].f;
+  if (!t.land) t.owner = -1;
+}
+
+function classifyAllBiomes() {
+  for (let i=0;i<tiles.length;i++) classifyTile(i);
+  syncCivTiles();
+  markTerrainFull();
+  markOverlayFull();
+}
+
+function syncCivTiles() {
+  const map = new Map();
+  for (let i=0;i<tiles.length;i++) {
+    const o = tiles[i].owner;
+    if (o>=0) {
+      let s = map.get(o); if (!s) { s = new Set(); map.set(o,s); }
+      s.add(i);
+    }
+  }
+  for (const c of civs) c.tiles = map.get(c.id) || new Set();
+}
+
+/* ============================================================
+   РЕНДЕР РЕЛЬЕФА
+   ============================================================ */
+function renderTerrainRange(tx0, ty0, tx1, ty1) {
+  if (!heightsSub || !moistSub) precomputeSubFields();
+  tx0 = clampI(tx0|0, 0, COLS-1); ty0 = clampI(ty0|0, 0, ROWS-1);
+  tx1 = clampI(tx1|0, 0, COLS-1); ty1 = clampI(ty1|0, 0, ROWS-1);
+  if (tx0>tx1 || ty0>ty1) return;
+
+  const px0 = tx0*SUB, py0 = ty0*SUB;
+  const px1 = (tx1+1)*SUB, py1 = (ty1+1)*SUB;
+
+  const d = terrainImg.data;
+  const seaLvl = seaLevel;
+  const invSea = 1 / Math.max(0.001, 1 - seaLvl);
+
+  for (let py=py0; py<py1; py++) {
+    const lat = Math.abs(py/H - 0.5)*2;
+    const tempBase = clamp(tempLevel*(1-lat*lat*0.88),0,1);
+    const rowOff = py*W, rowOff4 = rowOff*4;
+    const ty = (py/SUB)|0;
+    const tyCOLS = ty*COLS;
+
+    for (let px=px0; px<px1; px++) {
+      const idx = rowOff + px;
+      const h = heightsSub[idx];
+      const m = moistSub[idx];
+      const o = rowOff4 + px*4;
+
+      if (!isFinite(h)||!isFinite(m)) {
+        d[o]=15; d[o+1]=30; d[o+2]=60; d[o+3]=255; continue;
+      }
+
+      const hl = px>0 ? heightsSub[idx-1] : h;
+      const hr = px<W-1 ? heightsSub[idx+1] : h;
+      const hu = py>0 ? heightsSub[idx-W] : h;
+      const hd = py<H-1 ? heightsSub[idx+W] : h;
+      const gx = (hr-hl)*3;
+      const gy = (hd-hu)*3;
+
+      const tx = (px/SUB)|0;
+      const tile = tiles[tyCOLS+tx];
+      const ov = tile ? tile.override : null;
+      const hasLava = tile && tile.lava > 0;
+
+      let r,g,b;
+
+      if (ov && BIOMES[ov]) {
+        const bc = BIOMES[ov].c;
+        r = bc[0]; g = bc[1]; b = bc[2];
+        const nx = -gx*18, ny = -gy*18;
+        const nl = Math.sqrt(nx*nx+ny*ny+1);
+        const dot = (nx/nl)*(-0.55) + (ny/nl)*(-0.55) + (1/nl)*0.62;
+        const shade = clamp(0.5+dot*0.9,0.35,1.35);
+        r*=shade; g*=shade; b*=shade;
+        const nv = (hash2i(px,py)-0.5)*12;
+        r+=nv; g+=nv; b+=nv;
+      } else if (h < seaLvl) {
+        const depth = (seaLvl-h)/Math.max(0.001,seaLvl);
+        let wr,wg,wb;
+        if (depth < 0.10) {
+          const t = depth/0.10;
+          wr = lerp(140,90,t); wg = lerp(200,165,t); wb = lerp(210,195,t);
+        } else if (depth < 0.32) {
+          const t = (depth-0.10)/0.22;
+          wr = lerp(90,42,t); wg = lerp(165,100,t); wb = lerp(195,158,t);
+        } else if (depth < 0.62) {
+          const t = (depth-0.32)/0.30;
+          wr = lerp(42,16,t); wg = lerp(100,44,t); wb = lerp(158,105,t);
+        } else {
+          const t = (depth-0.62)/0.38;
+          wr = lerp(16,6,t); wg = lerp(44,18,t); wb = lerp(105,58,t);
+        }
+        const wave = Math.sin(px*0.06 + py*0.045 + Math.sin(py*0.08)*2.5)*0.5;
+        const wsh = 1 + wave*0.10;
+        wr*=wsh; wg*=wsh; wb*=wsh;
+        if (depth < 0.18) {
+          const cs = Math.sin(px*0.22+Math.sin(py*0.17)*5)*0.5+0.5;
+          const sh = Math.pow(cs,4)*(1-depth/0.18)*36;
+          wr += sh*0.3; wg += sh*0.55; wb += sh*0.55;
+        }
+        if (h > seaLvl-0.006) {
+          const foam = 1-(seaLvl-h)/0.006;
+          wr = lerp(wr,240,foam*0.75); wg = lerp(wg,245,foam*0.75); wb = lerp(wb,250,foam*0.75);
+        }
+        r = wr; g = wg; b = wb;
+      } else {
+        const e = (h-seaLvl)*invSea;
+        const temp = tempBase*(1-e*0.6);
+        const dry = 1-m, cold = 1-temp;
+
+        r = 212*(temp*dry) + 45*(temp*m) + 155*(cold*dry) + 72*(cold*m);
+        g = 180*(temp*dry) + 95*(temp*m) + 155*(cold*dry) + 105*(cold*m);
+        b = 118*(temp*dry) + 50*(temp*m) + 148*(cold*dry) + 75*(cold*m);
+
+        const slope = Math.sqrt(gx*gx+gy*gy)*3;
+        const rockT = smoothstep(0.6,2.5,slope);
+        r = lerp(r,115,rockT*0.75); g = lerp(g,106,rockT*0.75); b = lerp(b,98,rockT*0.75);
+
+        const snowT = smoothstep(0.55,0.82, e + (1-temp)*0.35);
+        r = lerp(r,244,snowT); g = lerp(g,248,snowT); b = lerp(b,252,snowT);
+
+        const beachT = (1-smoothstep(0,0.025,e))*(1-snowT)*smoothstep(0.15,0.4,temp);
+        r = lerp(r,218,beachT*0.8); g = lerp(g,200,beachT*0.8); b = lerp(b,155,beachT*0.8);
+
+        const nv = (hash2i(px,py)-0.5)*(10+m*8);
+        r += nv; g += nv*0.95; b += nv*0.85;
+
+        const nx = -gx*20, ny = -gy*20;
+        const nl = Math.sqrt(nx*nx+ny*ny+1);
+        const dot = (nx/nl)*(-0.55) + (ny/nl)*(-0.55) + (1/nl)*0.62;
+        let shade = clamp(0.45+dot*0.9, 0.30, 1.35);
+        const avgH = (hl+hr+hu+hd)*0.25;
+        shade *= clamp(1-(avgH-h)*6, 0.65, 1.1);
+        r*=shade; g*=shade; b*=shade;
+      }
+
+      if (hasLava) {
+        const heat = tile.lava;
+        const lr = 255;
+        const lg = 55 + heat*145;
+        const lb = 12 + heat*30;
+        const blend = Math.min(1, heat*1.15);
+        r = lerp(r,lr,blend);
+        g = lerp(g,lg,blend);
+        b = lerp(b,lb,blend);
+        const lg2 = (hash2i(px*3, py*3)-0.5)*40*heat;
+        r += lg2; g += lg2*0.6; b += lg2*0.2;
+        if (heat < 0.5) {
+          const crust = (1-heat/0.5);
+          r = lerp(r, 55, crust*0.5);
+          g = lerp(g, 48, crust*0.5);
+          b = lerp(b, 46, crust*0.5);
+        }
+      }
+
+      d[o]   = r<0?0:r>255?255:r;
+      d[o+1] = g<0?0:g>255?255:g;
+      d[o+2] = b<0?0:b>255?255:b;
+      d[o+3] = 255;
+    }
+  }
+
+  terrainCtx.putImageData(terrainImg, 0, 0, px0, py0, px1-px0, py1-py0);
+  drawRiversInRect(px0, py0, px1, py1);
+  updateMinimap();
+}
+
+function drawRiversInRect(x0,y0,x1,y1) {
+  if (!rivers.length) return;
+  terrainCtx.save();
+  terrainCtx.beginPath();
+  terrainCtx.rect(x0,y0,x1-x0,y1-y0);
+  terrainCtx.clip();
+  terrainCtx.lineCap = 'round';
+  terrainCtx.lineJoin = 'round';
+
+  const tx0 = x0/SUB - 1, ty0 = y0/SUB - 1, tx1 = x1/SUB + 1, ty1 = y1/SUB + 1;
+
+  for (const river of rivers) {
+    if (river.length < 2) continue;
+    const N = river.length;
+    for (let i=0;i<N-1;i++) {
+      const t1 = river[i], t2 = river[i+1];
+      const r1x = t1%COLS, r1y = (t1/COLS)|0;
+      const r2x = t2%COLS, r2y = (t2/COLS)|0;
+      if ((r1x<tx0 && r2x<tx0) || (r1x>tx1 && r2x>tx1)) continue;
+      if ((r1y<ty0 && r2y<ty0) || (r1y>ty1 && r2y>ty1)) continue;
+
+      const x1p = (r1x+0.5)*SUB, y1p = (r1y+0.5)*SUB;
+      const x2p = (r2x+0.5)*SUB, y2p = (r2y+0.5)*SUB;
+      const p = i/N;
+      const w = 1.1 + p*p*4.5;
+
+      terrainCtx.lineWidth = w*1.8;
+      terrainCtx.strokeStyle = `rgba(25,50,78,${0.4+p*0.3})`;
+      terrainCtx.beginPath(); terrainCtx.moveTo(x1p,y1p); terrainCtx.lineTo(x2p,y2p); terrainCtx.stroke();
+
+      terrainCtx.lineWidth = w;
+      terrainCtx.strokeStyle = `rgba(78,145,200,${0.75+p*0.2})`;
+      terrainCtx.beginPath(); terrainCtx.moveTo(x1p,y1p); terrainCtx.lineTo(x2p,y2p); terrainCtx.stroke();
+
+      if (w > 1.8) {
+        terrainCtx.lineWidth = w*0.35;
+        terrainCtx.strokeStyle = `rgba(185,225,248,${0.45+p*0.3})`;
+        terrainCtx.beginPath(); terrainCtx.moveTo(x1p,y1p); terrainCtx.lineTo(x2p,y2p); terrainCtx.stroke();
+      }
+    }
+  }
+  terrainCtx.restore();
+}
+
+function updateCivOverlayRange(tx0,ty0,tx1,ty1) {
+  tx0 = clampI(tx0|0, 0, COLS-1); ty0 = clampI(ty0|0, 0, ROWS-1);
+  tx1 = clampI(tx1|0, 0, COLS-1); ty1 = clampI(ty1|0, 0, ROWS-1);
+  if (tx0>tx1 || ty0>ty1) return;
+
+  const d = civImg.data;
+  const rowStride = W*4;
+
+  for (let ty=ty0; ty<=ty1; ty++) {
+    for (let tx=tx0; tx<=tx1; tx++) {
+      const tileIdx = ty*COLS+tx;
+      const o = tiles[tileIdx].owner;
+      const c = (o>=0 && civs[o] && !civs[o].deleted) ? civs[o].rgb : null;
+      const cr = c?c[0]:0, cg = c?c[1]:0, cb = c?c[2]:0, ca = c?155:0;
+      const px0 = tx*SUB, py0 = ty*SUB;
+      for (let sy=0; sy<SUB; sy++) {
+        const yRow = (py0+sy)*rowStride;
+        const base = yRow + px0*4;
+        for (let sx=0; sx<SUB; sx++) {
+          const idx = base + sx*4;
+          d[idx]=cr; d[idx+1]=cg; d[idx+2]=cb; d[idx+3]=ca;
+        }
+      }
+    }
+  }
+  civCtx.putImageData(civImg, 0, 0, tx0*SUB, ty0*SUB, (tx1-tx0+1)*SUB, (ty1-ty0+1)*SUB);
+}
+
+/* ============================================================
+   МИНИКАРТА
+   ============================================================ */
+const minimapEl = el('minimap');
+const minimapCtx = minimapEl.getContext('2d');
+const minimapView = el('minimap-view');
+let minimapScheduled = false;
+
+function updateMinimap() {
+  if (minimapScheduled) return;
+  minimapScheduled = true;
+  requestAnimationFrame(() => {
+    minimapScheduled = false;
+    minimapCtx.imageSmoothingEnabled = true;
+    minimapCtx.clearRect(0,0,minimapEl.width,minimapEl.height);
+    minimapCtx.drawImage(terrainCanvas,0,0,minimapEl.width,minimapEl.height);
+    minimapCtx.globalAlpha = 0.55;
+    minimapCtx.drawImage(civCanvas,0,0,minimapEl.width,minimapEl.height);
+    minimapCtx.globalAlpha = 1;
+  });
+}
+function updateMinimapView() {
+  const sw = COLS/view.zoom, sh = ROWS/view.zoom;
+  const sx = view.cx-sw/2, sy = view.cy-sh/2;
+  minimapView.style.left   = (sx/COLS*100)+'%';
+  minimapView.style.top    = (sy/ROWS*100)+'%';
+  minimapView.style.width  = (sw/COLS*100)+'%';
+  minimapView.style.height = (sh/ROWS*100)+'%';
+}
+
+/* ============================================================
+   РАЗМЕР КАНВАСА
+   ============================================================ */
+function resizeCanvas() {
+  const w = stageEl.clientWidth, h = stageEl.clientHeight;
+  if (w<=0||h<=0) return;
+  const dpr = Math.min(2, window.devicePixelRatio||1);
+  const nw = Math.max(1,Math.round(w*dpr));
+  const nh = Math.max(1,Math.round(h*dpr));
+  if (canvas.width !== nw || canvas.height !== nh) {
+    canvas.width = nw; canvas.height = nh;
+  }
+}
+new ResizeObserver(resizeCanvas).observe(stageEl);
+
+/* ============================================================
+   ЦИВИЛИЗАЦИИ
+   ============================================================ */
+function countAliveCivs() {
+  let n = 0;
+  for (const c of civs) if (c.alive && !c.deleted) n++;
+  return n;
+}
+function findFreeLandTile(minFert) {
+  const good=[], any=[];
+  for (let i=0;i<tiles.length;i++) {
+    if (tiles[i].land && tiles[i].owner === -1) {
+      any.push(i);
+      if (tiles[i].fert >= minFert) good.push(i);
+    }
+  }
+  const pool = good.length?good:any;
+  if (!pool.length) return -1;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function createCivAt(i, silent, customName) {
+  if (countAliveCivs() >= MAX_CIVS) return null;
+  if (!tiles[i] || !tiles[i].land || tiles[i].owner !== -1) return null;
+  const id = civs.length;
+  const ci = id % CIV_COLORS.length;
+  const c = {
+    id, name: customName || CIV_NAMES[id % CIV_NAMES.length],
+    color: CIV_COLORS[ci], rgb: hexToRgb(CIV_COLORS[ci]),
+    alive:true, tiles:new Set([i]), pop:10, capital:i,
+    age:0, founded:year, deleted:false,
+  };
+  tiles[i].owner = id;
+  civs.push(c);
+  markOverlayDirtyTile(i%COLS, (i/COLS)|0);
+  if (!silent) addLog(`🌱 Основана цивилизация <b style="color:${c.color}">${c.name}</b>`);
+  return c;
+}
+function spawnRandomCiv() {
+  const i = findFreeLandTile(0.32);
+  if (i < 0) return null;
+  return createCivAt(i);
+}
+function addCustomCiv() {
+  if (countAliveCivs() >= MAX_CIVS) { addLog(`⚠️ Лимит цивилизаций (${MAX_CIVS})`); return; }
+  const tileIdx = findFreeLandTile(0.30);
+  if (tileIdx < 0) { addLog('⚠️ Нет свободной земли'); return; }
+  const defaultName = CIV_NAMES[civs.length % CIV_NAMES.length];
+  let name = null;
+  try { name = prompt('Имя новой цивилизации:', defaultName); } catch(_){}
+  if (name === null) return;
+  name = String(name).trim().slice(0,24) || defaultName;
+  const c = createCivAt(tileIdx, true, name);
+  if (!c) return;
+  addLog(`✨ Создана цивилизация <b style="color:${c.color}">${c.name}</b>`);
+  onSelectionChanged(c.id);
+}
+function deleteCiv(id) {
+  const c = civs[id];
+  if (!c || c.deleted) return;
+  if (!confirm(`Удалить цивилизацию "${c.name}"?`)) return;
+  for (const i of c.tiles) if (tiles[i].owner === id) tiles[i].owner = -1;
+  c.tiles.clear();
+  c.alive = false; c.deleted = true; c.pop = 0;
+  markOverlayFull();
+  addLog(`🗑️ Цивилизация <b style="color:${c.color}">${c.name}</b> удалена`);
+  if (selectedCivId === id) onSelectionChanged(-1);
+  else { rebuildCivList(); updateHeaderNumbers(); }
+}
+
+/* ============================================================
+   СИМУЛЯЦИЯ
+   ============================================================ */
+function tick() {
+  year++;
+  for (const c of civs) {
+    if (!c.alive || c.deleted) continue;
+    if (c.tiles.size === 0) { c.alive = false; continue; }
+    let food = 0;
+    for (const i of c.tiles) food += tiles[i].fert;
+    const cap = c.tiles.size*14 + 12;
+    const fs = Math.min(1, food/(c.tiles.size*0.55+0.01));
+    c.pop += c.pop*0.08*fs*(1-c.pop/cap);
+    if (c.pop < 1) c.pop = 1;
+    c.age++;
+    if (c.pop > c.tiles.size*7+12 && Math.random()<0.65) tryExpand(c);
+  }
+  tickDisasters();
+  tickLava();
+  if (Math.random()<0.002) randomWorldEvent();
+}
+function tryExpand(c) {
+  const pool = [];
+  const check = (n) => {
+    const t = tiles[n];
+    if (!t.land) return;
+    if (t.owner === -1) pool.push({i:n,w:t.fert+0.06});
+    else if (t.owner !== c.id) {
+      const o = civs[t.owner];
+      if (o && o.alive && !o.deleted && c.pop > o.pop*1.6) pool.push({i:n,w:0.22,o});
+    }
+  };
+  for (const i of c.tiles) {
+    const x = i%COLS, y = (i/COLS)|0;
+    if (x>0) check(i-1);
+    if (x<COLS-1) check(i+1);
+    if (y>0) check(i-COLS);
+    if (y<ROWS-1) check(i+COLS);
+  }
+  if (!pool.length) return;
+  let total = 0; for (const p of pool) total += p.w;
+  let r = Math.random()*total, pick = pool[pool.length-1];
+  for (const p of pool) { r -= p.w; if (r<=0) { pick = p; break; } }
+  const t = tiles[pick.i];
+  const tx = pick.i%COLS, ty = (pick.i/COLS)|0;
+  if (t.owner === -1) {
+    t.owner = c.id; c.tiles.add(pick.i); c.pop *= 0.91;
+  } else {
+    const o = civs[t.owner];
+    o.tiles.delete(pick.i); t.owner = c.id; c.tiles.add(pick.i);
+    o.pop *= 0.90; c.pop *= 0.94;
+    if (o.tiles.size === 0) o.alive = false;
+  }
+  markOverlayDirtyTile(tx,ty);
+}
+
+function tickLava() {
+  if (activeLava.size === 0) return;
+  const toRemove = [];
+  for (const i of activeLava) {
+    const t = tiles[i];
+    if (!t) { toRemove.push(i); continue; }
+    t.lava -= LAVA_COOL_RATE;
+    if (t.lava <= 0) {
+      t.lava = 0;
+      t.basalt = true;
+      classifyTile(i);
+      toRemove.push(i);
+    }
+    markTerrainDirtyTile(i%COLS, (i/COLS)|0);
+  }
+  for (const i of toRemove) activeLava.delete(i);
+}
+
+function spawnDisaster(type, wx, wy) {
+  const def = DISASTER_TYPES[type]; if (!def) return;
+  const cx = clamp(wx,0,COLS-1), cy = clamp(wy,0,ROWS-1);
+  activeDisasters.push({ type, def, cx, cy, age:0, radius:def.initialRadius, appliedRadius:0 });
+  addLog(`${def.icon} <b style="color:${def.color}">${def.name}</b> в районе (${cx|0}, ${cy|0})`);
+}
+function tickDisasters() {
+  for (let i=activeDisasters.length-1; i>=0; i--) {
+    const d = activeDisasters[i];
+    d.age++;
+    d.radius = Math.min(d.def.maxRadius, d.radius + d.def.growthRate);
+    if (d.def.kind === 'terrain') applyTerrainDisaster(d);
+    else if (d.def.kind === 'civ') applyCivDisaster(d);
+    d.appliedRadius = d.radius;
+    if (d.age > d.def.duration) {
+      activeDisasters.splice(i,1);
+      addLog(`${d.def.icon} ${d.def.name} завершилась`);
+    }
+  }
+}
+function applyTerrainDisaster(d) {
+  const newR = d.radius, oldR = d.appliedRadius;
+  if (newR <= oldR + 0.001) return;
+  const x0 = Math.max(0, Math.floor(d.cx-newR)-1);
+  const x1 = Math.min(COLS-1, Math.ceil(d.cx+newR)+1);
+  const y0 = Math.max(0, Math.floor(d.cy-newR)-1);
+  const y1 = Math.min(ROWS-1, Math.ceil(d.cy+newR)+1);
+  const nR2 = newR*newR, oR2 = oldR*oldR;
+
+  for (let y=y0; y<=y1; y++) {
+    for (let x=x0; x<=x1; x++) {
+      const dx = x-d.cx, dy = y-d.cy, d2 = dx*dx+dy*dy;
+      if (d2 > nR2 || d2 < oR2) continue;
+      const t = tiles[y*COLS+x];
+      const rel = Math.sqrt(d2)/newR;
+      t.override = null;
+      if (d.type === 'meteor') {
+        if (rel < 0.35) t.h = Math.max(0, seaLevel-0.15);
+        else t.h = Math.max(0, t.h - (1-rel)*0.32);
+        t.basalt = false;
+        if (t.lava > 0) { activeLava.delete(y*COLS+x); t.lava = 0; }
+      } else if (d.type === 'volcano') {
+        t.h = Math.min(1, t.h + (1-rel)*0.35 + 0.15);
+        t.basalt = false;
+        const fresh = Math.max(0.35, 1 - rel*0.55);
+        if (fresh > t.lava) {
+          t.lava = fresh;
+          activeLava.add(y*COLS+x);
+        }
+      }
+      if (!isFinite(t.h)) t.h = 0.5;
+      t.owner = -1;
+      classifyTile(y*COLS+x);
+      markTerrainDirtyTile(x,y);
+      markOverlayDirtyTile(x,y);
+    }
+  }
+}
+function applyCivDisaster(d) {
+  const nR2 = d.radius*d.radius, oR2 = d.appliedRadius*d.appliedRadius;
+  for (const c of civs) {
+    if (!c.alive || c.deleted) continue;
+    let hits = 0;
+    for (const i of c.tiles) {
+      const dx = (i%COLS)-d.cx, dy = ((i/COLS)|0)-d.cy;
+      const d2 = dx*dx+dy*dy;
+      if (d2 <= nR2 && d2 >= oR2) { hits++; if (hits>4) break; }
+    }
+    if (hits > 0) c.pop *= 0.93;
+  }
+}
+function drawDisasters() {
+  const z = view.zoom, sw = COLS/z, sh = ROWS/z;
+  const sx = view.cx-sw/2, sy = view.cy-sh/2;
+  const sX = canvas.width/sw, sY = canvas.height/sh;
+  for (const d of activeDisasters) {
+    const cx = (d.cx-sx)*sX, cy = (d.cy-sy)*sY;
+    const rx = d.radius*sX, ry = d.radius*sY;
+    const pulse = 0.5+0.5*Math.sin(frameTime/250 + d.age*0.5);
+    ctx.save();
+    ctx.globalAlpha = 0.32 + pulse*0.35;
+    ctx.strokeStyle = d.def.color;
+    ctx.lineWidth = 2 + pulse*1.5;
+    ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.stroke();
+    const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,Math.max(rx,ry));
+    grad.addColorStop(0, `rgba(${d.def.rgb.join(',')},${0.4*pulse})`);
+    grad.addColorStop(1, `rgba(${d.def.rgb.join(',')},0)`);
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.9;
+    ctx.font = `${Math.max(12, 14+d.radius)}px serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(d.def.icon, cx, cy);
+    ctx.restore();
+  }
+}
+function randomWorldEvent() {
+  const p = ['meteor','plague','volcano'];
+  spawnDisaster(p[(Math.random()*p.length)|0], Math.random()*COLS, Math.random()*ROWS);
+}
+function iceAge() {
+  tempLevel = clamp(tempLevel-0.13, 0.30, 1.15);
+  el('r-temp').value = Math.round(tempLevel*100);
+  el('v-temp').textContent = celsiusLabel(tempLevel);
+  classifyAllBiomes();
+  addLog(`🧊 Ледниковый период: ${celsiusLabel(tempLevel)}`);
+}
+function flood() {
+  seaLevel = clamp(seaLevel+0.05, 0.25, 0.75);
+  el('r-sea').value = Math.round(seaLevel*100);
+  el('v-sea').textContent = metersLabel(seaLevel);
+  classifyAllBiomes();
+  generateRivers();
+  precomputeSubFields();
+  markTerrainFull();
+  addLog(`🌊 Потоп — уровень океана ${metersLabel(seaLevel)}`);
+}
+
+/* ============================================================
+   РИСОВАНИЕ
+   ============================================================ */
+function brushTiles(cx,cy,r) {
+  const out = [], r2 = r*r;
+  for (let dy=-r; dy<=r; dy++) for (let dx=-r; dx<=r; dx++) {
+    if (dx*dx+dy*dy > r2) continue;
+    const x = cx+dx, y = cy+dy;
+    if (x<0||y<0||x>=COLS||y>=ROWS) continue;
+    out.push(y*COLS+x);
+  }
+  return out;
+}
+function paintTileCiv(i) {
+  if (selectedCivId < 0) return false;
+  const c = civs[selectedCivId];
+  if (!c || !c.alive || c.deleted) return false;
+  const t = tiles[i];
+  if (!t.land || t.owner === selectedCivId) return false;
+  if (t.owner >= 0) {
+    const o = civs[t.owner];
+    if (!o || o.pop > c.pop*0.85) return false;
+    o.tiles.delete(i);
+    o.pop = Math.max(1, o.pop*0.98);
+    if (o.tiles.size === 0) o.alive = false;
+  }
+  t.owner = selectedCivId;
+  c.tiles.add(i);
+  c.pop = Math.max(1, c.pop-0.25);
+  markOverlayDirtyTile(i%COLS, (i/COLS)|0);
+  return true;
+}
+function paintTileBiomeData(i, biomeKey) {
+  const t = tiles[i]; if (!t) return false;
+  const nv = biomeKey === 'auto' ? null : biomeKey;
+  if (t.override === nv) return false;
+  t.override = nv;
+  if (biomeKey !== 'auto' && biomeKey !== 'basalt') t.basalt = false;
+  classifyTile(i);
+  markTerrainDirtyTile(i%COLS, (i/COLS)|0);
+  markOverlayDirtyTile(i%COLS, (i/COLS)|0);
+  return true;
+}
+function paintBrushBiome(tileIdx) {
+  const cx = tileIdx%COLS, cy = (tileIdx/COLS)|0;
+  const r = brushSize-1;
+  const list = r===0 ? [tileIdx] : brushTiles(cx,cy,r);
+  let any = false;
+  for (const i of list) if (paintTileBiomeData(i, selectedBiome)) any = true;
+  return any;
+}
+function eraseTile(i) {
+  const t = tiles[i];
+  if (t.owner < 0) return false;
+  const old = t.owner;
+  t.owner = -1;
+  if (civs[old]) {
+    civs[old].tiles.delete(i);
+    if (civs[old].tiles.size === 0 && !civs[old].deleted) civs[old].alive = false;
+  }
+  markOverlayDirtyTile(i%COLS, (i/COLS)|0);
+  return true;
+}
+function applyBrush(tileIdx, fn) {
+  const cx = tileIdx%COLS, cy = (tileIdx/COLS)|0;
+  const r = brushSize-1;
+  const list = r===0 ? [tileIdx] : brushTiles(cx,cy,r);
+  let any = false;
+  for (const i of list) if (fn(i)) any = true;
+  return any;
+}
+
+/* ============================================================
+   РЕНДЕР КАДРА
+   ============================================================ */
+function render(time) {
+  frameTime = time || 0;
+  resizeCanvas();
+
+  if (terrainDirtyRect) {
+    renderTerrainRange(terrainDirtyRect.x0, terrainDirtyRect.y0, terrainDirtyRect.x1, terrainDirtyRect.y1);
+    terrainDirtyRect = null;
+  }
+  if (overlayDirtyRect) {
+    updateCivOverlayRange(overlayDirtyRect.x0, overlayDirtyRect.y0, overlayDirtyRect.x1, overlayDirtyRect.y1);
+    overlayDirtyRect = null;
+  }
+
+  const z = view.zoom, sw = COLS/z, sh = ROWS/z;
+  const sx = view.cx-sw/2, sy = view.cy-sh/2;
+  const sX = canvas.width/sw, sY = canvas.height/sh;
+
+  const sxSub = sx*SUB, sySub = sy*SUB, swSub = sw*SUB, shSub = sh*SUB;
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = '#05080f';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(terrainCanvas, sxSub, sySub, swSub, shSub, 0, 0, canvas.width, canvas.height);
+
+  ctx.globalAlpha = 0.5;
+  ctx.drawImage(civCanvas, sxSub, sySub, swSub, shSub, 0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1;
+
+  ctx.save();
+  ctx.setTransform(sX,0,0,sY,-sx*sX,-sy*sY);
+
+  const paths = new Map();
+  const addSeg = (id,x1,y1,x2,y2) => {
+    let p = paths.get(id);
+    if (!p) { p = new Path2D(); paths.set(id,p); }
+    p.moveTo(x1,y1); p.lineTo(x2,y2);
+  };
+  const minX = Math.max(0, Math.floor(sx)-1);
+  const maxX = Math.min(COLS, Math.ceil(sx+sw)+1);
+  const minY = Math.max(0, Math.floor(sy)-1);
+  const maxY = Math.min(ROWS, Math.ceil(sy+sh)+1);
+
+  for (let y=minY; y<maxY; y++) {
+    for (let x=minX; x<maxX; x++) {
+      const i = y*COLS+x, t = tiles[i];
+      if (t.owner < 0) continue;
+      const r = x+1<COLS ? tiles[i+1] : null;
+      const d = y+1<ROWS ? tiles[i+COLS] : null;
+      if (!r || r.owner !== t.owner) addSeg(t.owner, x+1, y, x+1, y+1);
+      if (!d || d.owner !== t.owner) addSeg(t.owner, x, y+1, x+1, y+1);
+    }
+  }
+
+  const hasSel = selectedCivId>=0 && civs[selectedCivId] && civs[selectedCivId].alive && !civs[selectedCivId].deleted;
+  const hasHover = hoverCivId>=0 && civs[hoverCivId] && civs[hoverCivId].alive && !civs[hoverCivId].deleted;
+  const baseLw = 1.4/Math.sqrt(sX);
+
+  for (const [id,p] of paths) {
+    const c = civs[id]; if (!c || c.deleted) continue;
+    const dim = (hasSel && id !== selectedCivId) || (hasHover && id !== hoverCivId);
+    ctx.strokeStyle = c.color;
+    ctx.globalAlpha = dim ? 0.25 : 0.92;
+    ctx.lineWidth = id === selectedCivId ? baseLw*2.2 : baseLw;
+    ctx.stroke(p);
+  }
+  ctx.globalAlpha = 1;
+
+  const pulseId = hasSel ? selectedCivId : (hasHover ? hoverCivId : -1);
+  if (pulseId >= 0 && paths.has(pulseId)) {
+    const pulse = 0.5+0.5*Math.sin(frameTime/380);
+    ctx.strokeStyle = civs[pulseId].color;
+    ctx.globalAlpha = 0.35+pulse*0.5;
+    ctx.lineWidth = baseLw*(3+pulse*2.5);
+    ctx.stroke(paths.get(pulseId));
+    ctx.globalAlpha = 1;
+  }
+
+  for (const c of civs) {
+    if (!c.alive || c.deleted || !c.tiles.has(c.capital)) continue;
+    const cx = (c.capital%COLS)+0.5, cy = ((c.capital/COLS)|0)+0.5;
+    if (cx<sx-2||cx>sx+sw+2||cy<sy-2||cy>sy+sh+2) continue;
+    const popF = clamp(c.pop/400, 0.55, 1.6);
+    const r = 0.25 + popF*0.22;
+    const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,r*4);
+    grad.addColorStop(0, c.color+'cc');
+    grad.addColorStop(1, c.color+'00');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx,cy,r*4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.72)';
+    ctx.lineWidth = 1.4/sX; ctx.stroke();
+  }
+  ctx.restore();
+
+  drawDisasters();
+
+  if (dragPreview) {
+    const cx = (dragPreview.wx-sx)*sX, cy = (dragPreview.wy-sy)*sY;
+    const def = DISASTER_TYPES[dragPreview.type];
+    const r = def.initialRadius*sX;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.setLineDash([6,4]);
+    ctx.strokeStyle = def.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(def.icon, cx, cy);
+    ctx.restore();
+  }
+
+  // Подсветка "armed" катастрофы — курсор
+  if (armedDisaster && hoverTile >= 0) {
+    const hx = ((hoverTile%COLS)-sx)*sX + sX*0.5;
+    const hy = (((hoverTile/COLS)|0)-sy)*sY + sY*0.5;
+    const def = DISASTER_TYPES[armedDisaster];
+    const pulse = 0.5+0.5*Math.sin(frameTime/200);
+    ctx.save();
+    ctx.globalAlpha = 0.7 + pulse*0.3;
+    ctx.strokeStyle = def.color;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.arc(hx, hy, sX*1.2, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '22px serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(def.icon, hx, hy);
+    ctx.restore();
+  }
+
+  if (hoverTile >= 0 && !isMobile()) {
+    const hx = ((hoverTile%COLS)-sx)*sX;
+    const hy = (((hoverTile/COLS)|0)-sy)*sY;
+    const pw = sX*brushSize*2 - sX;
+    const ph = sY*brushSize*2 - sY;
+    const bxo = -(brushSize-1)*sX;
+    const byo = -(brushSize-1)*sY;
+    ctx.strokeStyle = 'rgba(140,210,255,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(hx+bxo+0.5, hy+byo+0.5, pw-1, ph-1);
+  } else if (hoverTile >= 0 && isMobile()) {
+    const hx = ((hoverTile%COLS)-sx)*sX;
+    const hy = (((hoverTile/COLS)|0)-sy)*sY;
+    ctx.strokeStyle = 'rgba(140,210,255,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(hx+0.5, hy+0.5, sX-1, sY-1);
+  }
+
+  updateMinimapView();
+}
+
+/* ============================================================
+   UI ЛОГИКА (структура + числа)
+   ============================================================ */
+function logColor(m) {
+  if (m.includes('🌱')) return '#4ade80';
+  if (m.includes('✨')) return '#7dd3fc';
+  if (m.includes('🗑️')) return '#94a3b8';
+  if (m.includes('⚔️')) return '#f87171';
+  if (m.includes('💀')) return '#94a3b8';
+  if (m.includes('☄️')||m.includes('🌋')) return '#fb923c';
+  if (m.includes('🧊')) return '#93c5fd';
+  if (m.includes('🌊')) return '#60a5fa';
+  if (m.includes('🦠')) return '#fbbf24';
+  return '#a0aec0';
+}
+function addLog(msg) {
+  logEntries.unshift(`<span class="yr">[${year}]</span> ${msg}`);
+  if (logEntries.length > 80) logEntries.pop();
+  renderLog();
+}
+function renderLog() {
+  el('log').innerHTML = logEntries.map(m => `<div style="border-left-color:${logColor(m)}">${m}</div>`).join('');
+}
+
+function updateHeaderNumbers() {
+  el('s-year').textContent = year;
+  el('s-civs').textContent = countAliveCivs();
+  let pop = 0, owned = 0, land = 0;
+  for (const c of civs) if (c.alive && !c.deleted) pop += c.pop;
+  for (const t of tiles) { if (t.owner >= 0) owned++; if (t.land) land++; }
+  const popStr = Math.round(pop).toLocaleString('ru-RU');
+  el('s-pop').textContent = popStr;
+  el('s-land').textContent = land ? Math.round(owned/land*100)+'%' : '0%';
+  el('s-zoom').textContent = view.zoom.toFixed(1)+'×';
+
+  // Мобильная шапка
+  const mobYear = el('mob-year');
+  const mobPop = el('mob-pop');
+  if (mobYear) mobYear.textContent = year;
+  if (mobPop) mobPop.textContent = popStr;
+}
+
+let civNodes = new Map();
+function rebuildCivList() {
+  const list = el('civ-list');
+  civNodes.clear();
+  const vis = civs.filter(c => !c.deleted);
+  const sorted = vis.slice().sort((a,b) => (b.alive-a.alive) || (b.pop-a.pop));
+
+  if (!sorted.length) {
+    list.innerHTML = '<div style="color:#5a6b85;font-size:11px;padding:6px">Нет цивилизаций. Нажмите ➕</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  for (const c of sorted) {
+    const row = document.createElement('div');
+    row.className = 'civ' + (c.alive?'':' dead') + (c.id===selectedCivId?' selected':'');
+    row.dataset.id = c.id;
+    row.innerHTML = `
+      <span class="dot" style="background:${c.color};color:${c.color}"></span>
+      <span class="nm">${c.name}</span>
+      <span class="num">${c.alive?Math.round(c.pop):'—'}</span>
+      <span class="paint-icon">✎</span>
+      <button class="civ-del" data-del="${c.id}" title="Удалить">✕</button>
+    `;
+
+    const numEl = row.querySelector('.num');
+    row.addEventListener('click', ev => {
+      if (ev.target.closest('.civ-del')) return;
+      const cc = civs[c.id];
+      if (!cc || !cc.alive || cc.deleted) return;
+      if (selectedCivId === c.id) onSelectionChanged(-1);
+      else onSelectionChanged(c.id);
+    });
+    row.addEventListener('mouseenter', () => { if (civs[c.id] && civs[c.id].alive && !civs[c.id].deleted) hoverCivId = c.id; });
+    row.addEventListener('mouseleave', () => { if (hoverCivId === c.id) hoverCivId = -1; });
+    row.querySelector('.civ-del').addEventListener('click', ev => {
+      ev.stopPropagation();
+      deleteCiv(c.id);
+    });
+    list.appendChild(row);
+    civNodes.set(c.id, { root: row, num: numEl });
+  }
+}
+function updateCivListNumbers() {
+  for (const c of civs) {
+    const ref = civNodes.get(c.id);
+    if (!ref) continue;
+    const txt = c.alive ? Math.round(c.pop) : '—';
+    if (ref.num.textContent !== String(txt)) ref.num.textContent = txt;
+    const wantDead = !c.alive;
+    if (ref.root.classList.contains('dead') !== wantDead) {
+      ref.root.classList.toggle('dead', wantDead);
+    }
+  }
+}
+
+let detailsRefs = null;
+function rebuildDetails() {
+  const box = el('details');
+  const c = selectedCivId >= 0 ? civs[selectedCivId] : null;
+  if (!c || !c.alive || c.deleted) {
+    box.classList.remove('show');
+    detailsRefs = null;
+    return;
+  }
+  const capX = c.capital%COLS, capY = (c.capital/COLS)|0;
+  box.classList.add('show');
+  box.innerHTML = `
+    <div class="d-header">
+      <span class="dot" style="background:${c.color};color:${c.color}"></span>
+      <span class="d-name" style="color:${c.color}">${c.name}</span>
+    </div>
+    <div class="d-row"><span>Население</span><b id="d-pop">—</b></div>
+    <div class="d-row"><span>Территория</span><b id="d-tiles">—</b></div>
+    <div class="d-row"><span>Плодородие</span><b id="d-fert">—</b></div>
+    <div class="d-row"><span>Возраст</span><b id="d-age">—</b></div>
+    <div class="d-row"><span>Столица</span><b>(${capX}, ${capY})</b></div>
+    <div class="hint-paint">✎ Кликайте или ведите по карте, чтобы расширить.<br>Esc — выйти из режима.</div>
+  `;
+  detailsRefs = {
+    pop: el('d-pop'), tiles: el('d-tiles'),
+    fert: el('d-fert'), age: el('d-age'),
+  };
+  updateDetailsNumbers();
+}
+function updateDetailsNumbers() {
+  if (!detailsRefs) return;
+  const c = selectedCivId >= 0 ? civs[selectedCivId] : null;
+  if (!c || !c.alive || c.deleted) { rebuildDetails(); return; }
+  let food = 0; for (const i of c.tiles) food += tiles[i].fert;
+  detailsRefs.pop.textContent = Math.round(c.pop).toLocaleString('ru-RU');
+  detailsRefs.tiles.textContent = c.tiles.size + ' клеток';
+  detailsRefs.fert.textContent = food.toFixed(1);
+  detailsRefs.age.textContent = c.age + ' лет';
+}
+
+function rebuildPaintBanner() {
+  const banner = el('paint-banner'), sw = el('pb-swatch'), txt = el('pb-text');
+  if (tool === 'civ' && selectedCivId >= 0 && civs[selectedCivId] && !civs[selectedCivId].deleted) {
+    const c = civs[selectedCivId];
+    sw.style.background = c.color; sw.style.color = c.color;
+    txt.innerHTML = `Расселяем: <b style="color:${c.color}">${c.name}</b> · ${brushSize}×${brushSize}`;
+    banner.classList.add('show');
+  } else if (tool === 'biome') {
+    const b = BIOMES[selectedBiome];
+    const rgb = `rgb(${b.c.join(',')})`;
+    sw.style.background = rgb; sw.style.color = rgb;
+    txt.innerHTML = `Биом: <b style="color:${rgb}">${b.icon} ${b.n}</b> · ${brushSize}×${brushSize}`;
+    banner.classList.add('show');
+  } else if (tool === 'erase') {
+    sw.style.background = '#94a3b8'; sw.style.color = '#94a3b8';
+    txt.innerHTML = `Ластик · ${brushSize}×${brushSize}`;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function onSelectionChanged(id) {
+  selectedCivId = id;
+  if (id >= 0 && tool !== 'civ' && tool !== 'biome' && tool !== 'erase') {
+    tool = 'civ';
+    syncToolButtons();
+  }
+  if (id < 0 && tool === 'civ') {
+    tool = 'view';
+    syncToolButtons();
+  }
+  rebuildCivList();
+  rebuildDetails();
+  rebuildPaintBanner();
+  updateHeaderNumbers();
+}
+
+function syncToolButtons() {
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
+  document.querySelectorAll('.mob-tool[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
+  el('biome-palette').classList.toggle('show', tool === 'biome');
+  el('mobileBiomeBar').classList.toggle('show', tool === 'biome' && isMobile());
+}
+
+function setTool(t) {
+  tool = t;
+  syncToolButtons();
+  rebuildPaintBanner();
+}
+
+let uiAcc = 0;
+function updateUINumbers() {
+  updateHeaderNumbers();
+  updateCivListNumbers();
+  updateDetailsNumbers();
+}
+
+/* ============================================================
+   МОБИЛЬНЫЕ DRAWER-МЕНЮ
+   ============================================================ */
+const panelLeft = el('panelLeft');
+const panelRight = el('panelRight');
+const drawerOverlay = el('drawerOverlay');
+
+function openDrawer(side) {
+  closeDrawers();
+  if (side === 'left') panelLeft.classList.add('open');
+  else panelRight.classList.add('open');
+  drawerOverlay.classList.add('show');
+  document.body.classList.add('drawer-open');
+}
+function closeDrawers() {
+  panelLeft.classList.remove('open');
+  panelRight.classList.remove('open');
+  drawerOverlay.classList.remove('show');
+  document.body.classList.remove('drawer-open');
+}
+
+el('openLeftDrawer').addEventListener('click', () => openDrawer('left'));
+el('openRightDrawer').addEventListener('click', () => openDrawer('right'));
+el('mobToolsBtn').addEventListener('click', () => openDrawer('left'));
+el('drawerOverlay').addEventListener('click', () => closeDrawers());
+document.querySelectorAll('.drawer-close').forEach(b => {
+  b.addEventListener('click', () => closeDrawers());
+});
+
+// Плавающая кнопка play в мобильной шапке
+const mobPlayBtn = el('mobPlayBtn');
+mobPlayBtn.addEventListener('click', () => togglePlay());
+
+/* ============================================================
+   ПОЛНОЭКРАННЫЙ РЕЖИМ
+   ============================================================ */
+el('btnFullscreen').addEventListener('click', () => {
+  const doc = document.documentElement;
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  if (!isFs) {
+    const req = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.msRequestFullscreen;
+    if (req) req.call(doc, { navigationUI: 'hide' }).catch(()=>{});
+    // Пытаемся заблокировать ориентацию
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('any').catch(()=>{});
+    }
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (exit) exit.call(document);
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  el('btnFullscreen').textContent = isFs ? '⛶' : '⛶';
+  setTimeout(resizeCanvas, 100);
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  setTimeout(resizeCanvas, 100);
+});
+
+/* ============================================================
+   PLAY/PAUSE
+   ============================================================ */
+function togglePlay() {
+  running = !running;
+  el('btn-play').textContent = running ? '⏸ Пауза' : '▶ Старт';
+  el('btn-play').classList.toggle('pause', running);
+  mobPlayBtn.textContent = running ? '⏸' : '▶';
+  mobPlayBtn.classList.toggle('pause', running);
+}
+
+/* ============================================================
+   ЗУМ / ПАН
+   ============================================================ */
+function clampView() {
+  const hw = COLS/(2*view.zoom), hh = ROWS/(2*view.zoom);
+  view.cx = clamp(view.cx, hw, COLS-hw);
+  view.cy = clamp(view.cy, hh, ROWS-hh);
+}
+function zoomTo(nz, apx, apy) {
+  nz = clamp(nz, MIN_ZOOM, MAX_ZOOM);
+  if (Math.abs(nz-view.zoom) < 0.0001) return;
+  const osw = COLS/view.zoom, osh = ROWS/view.zoom;
+  const osx = view.cx-osw/2, osy = view.cy-osh/2;
+  const wx = osx+apx*osw, wy = osy+apy*osh;
+  view.zoom = nz;
+  const nsw = COLS/nz, nsh = ROWS/nz;
+  view.cx = wx + (0.5-apx)*nsw;
+  view.cy = wy + (0.5-apy)*nsh;
+  clampView();
+  updateZoomUI();
+}
+function updateZoomUI() {
+  const t = (Math.log(view.zoom)-Math.log(MIN_ZOOM)) / (Math.log(MAX_ZOOM)-Math.log(MIN_ZOOM));
+  el('z-slider').value = Math.round(t*1000);
+  el('z-val').textContent = view.zoom.toFixed(1)+'×';
+  el('s-zoom').textContent = view.zoom.toFixed(1)+'×';
+}
+function screenToWorld(cx, cy) {
+  const rect = canvas.getBoundingClientRect();
+  const px = clamp((cx-rect.left)/rect.width, 0, 1);
+  const py = clamp((cy-rect.top)/rect.height, 0, 1);
+  const sw = COLS/view.zoom, sh = ROWS/view.zoom;
+  const sx = view.cx-sw/2, sy = view.cy-sh/2;
+  return { wx: sx+px*sw, wy: sy+py*sh, px, py };
+}
+function screenToTile(cx, cy) {
+  const { wx, wy } = screenToWorld(cx, cy);
+  const x = Math.floor(wx), y = Math.floor(wy);
+  if (x<0||y<0||x>=COLS||y>=ROWS) return -1;
+  return y*COLS+x;
+}
+
+/* ============================================================
+   УКАЗАТЕЛЬ / ЖЕСТЫ
+   ============================================================ */
+const pointer = { down:false, button:0, startX:0, startY:0,
+                  lastClientX:0, lastClientY:0, moved:false, mode:'idle', lastTile:-1 };
+const activePointers = new Map();
+let pinchState = null;
+
+function getTwoPointers() {
+  const arr = [...activePointers.values()];
+  if (arr.length < 2) return null;
+  return [arr[0], arr[1]];
+}
+
+function onPointerDown(e) {
+  // Игнорируем клики, которые попали в UI-элементы поверх канваса
+  if (e.target !== canvas) return;
+
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  // Pinch (2 пальца)
+  if (activePointers.size === 2) {
+    // Отменяем текущее действие
+    pointer.down = false;
+    pointer.mode = 'idle';
+    const [a,b] = getTwoPointers();
+    pinchState = {
+      dist: Math.hypot(a.x-b.x, a.y-b.y),
+      midX: (a.x+b.x)/2, midY: (a.y+b.y)/2,
+      zoom: view.zoom, cx: view.cx, cy: view.cy,
+    };
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+
+  if (activePointers.size > 2) return;
+
+  if (e.button === 1 || e.shiftKey) pointer.mode = 'pan';
+  else if (e.button === 2) pointer.mode = 'erase';
+  else if (e.button === 0) {
+    // Если armedDisaster — тап по карте разместит катастрофу
+    if (armedDisaster) { pointer.mode = 'place-disaster'; }
+    else if (tool === 'civ' && selectedCivId >= 0) pointer.mode = 'paint-civ';
+    else if (tool === 'biome') pointer.mode = 'paint-biome';
+    else if (tool === 'erase') pointer.mode = 'erase';
+    else pointer.mode = 'idle';
+  } else return;
+
+  pointer.down = true; pointer.button = e.button;
+  pointer.startX = e.clientX; pointer.startY = e.clientY;
+  pointer.lastClientX = e.clientX; pointer.lastClientY = e.clientY;
+  pointer.moved = false;
+  pointer.lastTile = screenToTile(e.clientX, e.clientY);
+
+  if (pointer.mode === 'paint-civ' && pointer.lastTile >= 0) applyBrush(pointer.lastTile, paintTileCiv);
+  else if (pointer.mode === 'paint-biome' && pointer.lastTile >= 0) paintBrushBiome(pointer.lastTile);
+  else if (pointer.mode === 'erase' && pointer.lastTile >= 0) applyBrush(pointer.lastTile, eraseTile);
+  // place-disaster не применяется тут — только на pointerup, чтобы не срабатывало случайно
+
+  canvas.setPointerCapture(e.pointerId);
+  canvas.style.cursor = pointer.mode === 'pan' ? 'grabbing' : 'crosshair';
+  e.preventDefault();
+}
+
+function onPointerMove(e) {
+  if (activePointers.has(e.pointerId)) {
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }
+
+  // Pinch — 2 пальца
+  if (pinchState && activePointers.size >= 2) {
+    const two = getTwoPointers();
+    if (!two) return;
+    const [a,b] = two;
+    const dist = Math.hypot(a.x-b.x, a.y-b.y);
+    const midX = (a.x+b.x)/2, midY = (a.y+b.y)/2;
+
+    const scale = dist / pinchState.dist;
+    const newZoom = clamp(pinchState.zoom * scale, MIN_ZOOM, MAX_ZOOM);
+
+    const rect = canvas.getBoundingClientRect();
+    const startMidPx = (pinchState.midX - rect.left) / rect.width;
+    const startMidPy = (pinchState.midY - rect.top) / rect.height;
+    const curMidPx = (midX - rect.left) / rect.width;
+    const curMidPy = (midY - rect.top) / rect.height;
+
+    const ssw = COLS / pinchState.zoom;
+    const ssh = ROWS / pinchState.zoom;
+    const ssx = pinchState.cx - ssw/2;
+    const ssy = pinchState.cy - ssh/2;
+    const wx = ssx + startMidPx * ssw;
+    const wy = ssy + startMidPy * ssh;
+
+    view.zoom = newZoom;
+    const nsw = COLS / newZoom;
+    const nsh = ROWS / newZoom;
+    view.cx = wx - (curMidPx - 0.5) * nsw;
+    view.cy = wy - (curMidPy - 0.5) * nsh;
+    clampView();
+    updateZoomUI();
+    e.preventDefault();
+    return;
+  }
+
+  if (pointer.down) {
+    const dx = e.clientX - pointer.lastClientX, dy = e.clientY - pointer.lastClientY;
+    const dist = Math.hypot(e.clientX - pointer.startX, e.clientY - pointer.startY);
+    if (dist > 6) pointer.moved = true;
+
+    if (pointer.mode === 'idle' && pointer.moved) {
+      pointer.mode = 'pan';
+      canvas.style.cursor = 'grabbing';
+    }
+    if (pointer.mode === 'pan') {
+      const sw = COLS/view.zoom, sh = ROWS/view.zoom;
+      const rect = canvas.getBoundingClientRect();
+      view.cx -= dx/rect.width * sw;
+      view.cy -= dy/rect.height * sh;
+      clampView();
+    } else if (pointer.mode === 'paint-civ' || pointer.mode === 'paint-biome' || pointer.mode === 'erase') {
+      const t = screenToTile(e.clientX, e.clientY);
+      if (t >= 0 && t !== pointer.lastTile) {
+        const t0 = pointer.lastTile;
+        const x0 = t0%COLS, y0 = (t0/COLS)|0;
+        const x1 = t%COLS, y1 = (t/COLS)|0;
+        const steps = Math.max(Math.abs(x1-x0), Math.abs(y1-y0));
+        for (let s=1; s<=steps; s++) {
+          const xx = Math.round(x0 + (x1-x0)*s/steps);
+          const yy = Math.round(y0 + (y1-y0)*s/steps);
+          const ii = yy*COLS+xx;
+          if (pointer.mode === 'paint-civ') applyBrush(ii, paintTileCiv);
+          else if (pointer.mode === 'paint-biome') paintBrushBiome(ii);
+          else applyBrush(ii, eraseTile);
+        }
+        pointer.lastTile = t;
+      }
+    }
+    pointer.lastClientX = e.clientX; pointer.lastClientY = e.clientY;
+    e.preventDefault();
+  }
+
+  // Обновляем hover только на desktop (на мобильном будет мешать)
+  if (!isMobile() || !pointer.down) {
+    updateHover(e.clientX, e.clientY);
+  } else {
+    // На мобильном, если держим палец — покажем последнюю позицию для "armed" индикатора
+    if (armedDisaster) {
+      hoverTile = screenToTile(e.clientX, e.clientY);
+    }
+  }
+}
+
+function onPointerUp(e) {
+  activePointers.delete(e.pointerId);
+
+  // Закончился pinch
+  if (pinchState && activePointers.size < 2) {
+    pinchState = null;
+  }
+
+  if (!pointer.down) {
+    return;
+  }
+
+  // Тап (без движения) — обрабатываем выбор/размещение
+  if (!pointer.moved) {
+    const i = screenToTile(e.clientX, e.clientY);
+    if (i >= 0) {
+      // Размещение "armed" катастрофы
+      if (armedDisaster) {
+        const { wx, wy } = screenToWorld(e.clientX, e.clientY);
+        spawnDisaster(armedDisaster, wx, wy);
+        clearArmedDisaster();
+        return;
+      }
+      if (pointer.mode === 'idle') {
+        const t = tiles[i];
+        if (t.owner >= 0) {
+          onSelectionChanged(selectedCivId === t.owner ? -1 : t.owner);
+        } else if (t.land) {
+          const c = createCivAt(i);
+          if (c) onSelectionChanged(c.id);
+        }
+      }
+    }
+  }
+
+  pointer.down = false; pointer.mode = 'idle'; pointer.lastTile = -1;
+  canvas.style.cursor = 'crosshair';
+  try { canvas.releasePointerCapture(e.pointerId); } catch(_){}
+}
+
+function onPointerCancel(e) {
+  activePointers.delete(e.pointerId);
+  if (pinchState && activePointers.size < 2) pinchState = null;
+  if (pointer.down) {
+    pointer.down = false; pointer.mode = 'idle'; pointer.lastTile = -1;
+    canvas.style.cursor = 'crosshair';
+  }
+}
+
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('pointercancel', onPointerCancel);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+const tooltip = el('tooltip');
+function updateHover(cx, cy) {
+  const rect = canvas.getBoundingClientRect();
+  if (cx<rect.left||cx>rect.right||cy<rect.top||cy>rect.bottom) {
+    tooltip.classList.remove('show'); hoverTile = -1; return;
+  }
+  const i = screenToTile(cx, cy);
+  if (i < 0) { tooltip.classList.remove('show'); hoverTile = -1; return; }
+  hoverTile = i;
+
+  const t = tiles[i];
+  const owner = t.owner>=0 && civs[t.owner] && !civs[t.owner].deleted ? civs[t.owner].name : 'нейтральная';
+  const ownerColor = t.owner>=0 && civs[t.owner] && !civs[t.owner].deleted ? civs[t.owner].color : '#8fa3bf';
+  let extra = '';
+  if (t.owner>=0 && civs[t.owner] && !civs[t.owner].deleted) extra = `<br>Население: <b>${Math.round(civs[t.owner].pop)}</b>`;
+  const hVal = isFinite(t.h) ? (t.h*100).toFixed(0)+'%' : '?';
+  const mVal = isFinite(t.moist) ? (t.moist*100).toFixed(0)+'%' : '?';
+  let lavaStr = '';
+  if (t.lava > 0) {
+    const heat = t.lava > 0.7 ? '🔥 свежая' : t.lava > 0.3 ? '🌡️ остывает' : '🪨 почти камень';
+    lavaStr = `<br>Лава: <b style="color:#fb923c">${(t.lava*100).toFixed(0)}%</b> · ${heat}`;
+  } else if (t.basalt) {
+    lavaStr = `<br><span style="color:#94a3b8">🪨 застывший базальт</span>`;
+  }
+
+  tooltip.innerHTML =
+    `<b>${BIOMES[t.biome].n}</b>${t.override ? ' <span style="color:#fbbf24">✎</span>' : ''}<br>` +
+    `Высота: <b>${hVal}</b> · Плодородие: <b>${t.fert.toFixed(2)}</b><br>` +
+    `Влажность: <b>${mVal}</b><br>` +
+    `Территория: <b style="color:${ownerColor}">${owner}</b>${extra}${lavaStr}`;
+
+  const sRect = stageEl.getBoundingClientRect();
+  let tx = cx - sRect.left + 14, ty = cy - sRect.top + 14;
+  tooltip.style.visibility = 'hidden';
+  tooltip.classList.add('show');
+  const tr = tooltip.getBoundingClientRect();
+  tooltip.style.visibility = '';
+  if (tx + tr.width > sRect.width - 8) tx = cx - sRect.left - tr.width - 14;
+  if (ty + tr.height > sRect.height - 8) ty = cy - sRect.top - tr.height - 14;
+  if (tx < 4) tx = 4;
+  if (ty < 4) ty = 4;
+  tooltip.style.left = tx+'px';
+  tooltip.style.top  = ty+'px';
+}
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX-rect.left)/rect.width;
+  const py = (e.clientY-rect.top)/rect.height;
+  const factor = e.deltaY < 0 ? 1.18 : 1/1.18;
+  zoomTo(view.zoom*factor, px, py);
+}, { passive: false });
+
+/* ============================================================
+   МИНИКАРТА
+   ============================================================ */
+function minimapJump(cx, cy) {
+  const rect = minimapEl.getBoundingClientRect();
+  const px = clamp((cx-rect.left)/rect.width, 0, 1);
+  const py = clamp((cy-rect.top)/rect.height, 0, 1);
+  view.cx = px*COLS; view.cy = py*ROWS;
+  clampView();
+}
+el('minimap-wrap').addEventListener('pointerdown', e => {
+  minimapJump(e.clientX, e.clientY);
+  const onMove = ev => minimapJump(ev.clientX, ev.clientY);
+  const onUp = () => {
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onUp);
+  };
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  e.preventDefault();
+});
+
+/* ============================================================
+   DRAG & DROP (desktop) + armed disaster (mobile)
+   ============================================================ */
+let dragType = null, dragPreview = null;
+let armedDisaster = null;
+
+document.querySelectorAll('.disaster-btn').forEach(btn => {
+  // Desktop drag
+  btn.addEventListener('dragstart', e => {
+    if (isMobile()) { e.preventDefault(); return; }
+    dragType = btn.dataset.disaster;
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('text/plain', dragType);
+    btn.classList.add('dragging');
+    el('drag-hint').classList.add('show');
+  });
+  btn.addEventListener('dragend', () => {
+    dragType = null; dragPreview = null;
+    btn.classList.remove('dragging');
+    el('drag-hint').classList.remove('show');
+  });
+  // Mobile: tap to arm
+  btn.addEventListener('click', () => {
+    if (!isMobile()) return;
+    const type = btn.dataset.disaster;
+    if (armedDisaster === type) clearArmedDisaster();
+    else {
+      armedDisaster = type;
+      document.querySelectorAll('.disaster-btn').forEach(b => {
+        b.classList.toggle('armed', b.dataset.disaster === type);
+      });
+      addLog(`👉 Тапните по карте, чтобы разместить: ${DISASTER_TYPES[type].icon} ${DISASTER_TYPES[type].name}`);
+      closeDrawers();
+    }
+  });
+});
+
+function clearArmedDisaster() {
+  armedDisaster = null;
+  document.querySelectorAll('.disaster-btn').forEach(b => b.classList.remove('armed'));
+}
+
+canvas.addEventListener('dragover', e => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  if (!dragType) return;
+  const { wx, wy } = screenToWorld(e.clientX, e.clientY);
+  dragPreview = { type: dragType, wx, wy };
+});
+canvas.addEventListener('dragleave', () => { dragPreview = null; });
+canvas.addEventListener('drop', e => {
+  e.preventDefault();
+  const type = dragType || e.dataTransfer.getData('text/plain');
+  el('drag-hint').classList.remove('show');
+  dragPreview = null;
+  if (!type || !DISASTER_TYPES[type]) return;
+  const { wx, wy } = screenToWorld(e.clientX, e.clientY);
+  spawnDisaster(type, wx, wy);
+  dragType = null;
+});
+
+/* ============================================================
+   КНОПКИ
+   ============================================================ */
+el('btn-play').onclick = () => togglePlay();
+el('btn-step').onclick = () => { tick(); render(performance.now()); updateUINumbers(); };
+el('btn-new').onclick = () => newWorld();
+el('btn-add-civ').onclick = () => addCustomCiv();
+
+el('r-speed').oninput = e => { speed = +e.target.value; el('v-speed').textContent = speed+'×'; };
+
+let tempTO = null;
+el('r-temp').oninput = e => {
+  tempLevel = +e.target.value/100;
+  el('v-temp').textContent = celsiusLabel(tempLevel);
+  clearTimeout(tempTO);
+  tempTO = setTimeout(() => classifyAllBiomes(), 80);
+};
+let seaTO = null;
+el('r-sea').oninput = e => {
+  seaLevel = +e.target.value/100;
+  el('v-sea').textContent = metersLabel(seaLevel);
+  clearTimeout(seaTO);
+  seaTO = setTimeout(() => {
+    classifyAllBiomes();
+    generateRivers();
+    precomputeSubFields();
+    markTerrainFull();
+  }, 80);
+};
+el('r-brush').oninput = e => {
+  brushSize = +e.target.value;
+  el('v-brush').textContent = brushSize;
+  rebuildPaintBanner();
+};
+
+el('d-ice').onclick = () => { iceAge(); if (isMobile()) closeDrawers(); };
+el('d-flood').onclick = () => { flood(); if (isMobile()) closeDrawers(); };
+
+el('z-in').onclick = () => zoomTo(view.zoom*1.35, 0.5, 0.5);
+el('z-out').onclick = () => zoomTo(view.zoom/1.35, 0.5, 0.5);
+el('z-slider').oninput = e => {
+  const t = +e.target.value/1000;
+  const z = Math.exp(Math.log(MIN_ZOOM) + t*(Math.log(MAX_ZOOM)-Math.log(MIN_ZOOM)));
+  zoomTo(z, 0.5, 0.5);
+};
+
+el('pb-close').onclick = () => {
+  onSelectionChanged(-1);
+};
+
+document.querySelectorAll('.tool-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const t = b.dataset.tool;
+    if (t === 'civ' && selectedCivId < 0) {
+      addLog('⚠️ Сначала выберите цивилизацию в списке');
+      if (isMobile()) openDrawer('right');
+      return;
+    }
+    setTool(t);
+    if (isMobile() && t !== 'biome') closeDrawers();
+  });
+});
+
+// Мобильный тулбар
+document.querySelectorAll('.mob-tool[data-tool]').forEach(b => {
+  b.addEventListener('click', () => {
+    const t = b.dataset.tool;
+    if (t === 'civ' && selectedCivId < 0) {
+      addLog('⚠️ Сначала выберите цивилизацию');
+      openDrawer('right');
+      return;
+    }
+    setTool(t);
+  });
+});
+
+/* ============================================================
+   ПАЛИТРА БИОМОВ
+   ============================================================ */
+function buildBiomePaletteInto(container, isMobilePalette) {
+  container.innerHTML = '';
+  for (const [key,b] of Object.entries(BIOMES)) {
+    const rgb = `rgb(${b.c.join(',')})`;
+    const item = document.createElement('div');
+    if (isMobilePalette) {
+      item.className = 'mb-item';
+      item.dataset.biome = key;
+      item.style.background = rgb;
+      item.textContent = b.icon;
+      item.title = b.n;
+    } else {
+      item.className = 'biome-item';
+      item.dataset.biome = key;
+      item.style.background = rgb;
+      item.textContent = b.icon;
+      item.title = b.n;
+    }
+    item.addEventListener('click', () => {
+      selectedBiome = key;
+      container.querySelectorAll('[data-biome]').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      rebuildPaintBanner();
+    });
+    container.appendChild(item);
+  }
+  // Auto
+  const autoItem = document.createElement('div');
+  if (isMobilePalette) {
+    autoItem.className = 'mb-item';
+    autoItem.dataset.biome = 'auto';
+    autoItem.style.background = '#2a3648';
+    autoItem.style.color = '#8fa3bf';
+    autoItem.style.fontSize = '10px';
+    autoItem.textContent = 'auto';
+    autoItem.title = 'Сбросить';
+  } else {
+    autoItem.className = 'biome-item';
+    autoItem.dataset.biome = 'auto';
+    autoItem.style.background = '#2a3648';
+    autoItem.style.color = '#8fa3bf';
+    autoItem.style.fontSize = '10px';
+    autoItem.textContent = 'auto';
+    autoItem.title = 'Сбросить';
+  }
+  autoItem.addEventListener('click', () => {
+    selectedBiome = 'auto';
+    container.querySelectorAll('[data-biome]').forEach(n => n.classList.remove('active'));
+    autoItem.classList.add('active');
+    rebuildPaintBanner();
+  });
+  container.appendChild(autoItem);
+}
+
+(function buildPalettes() {
+  buildBiomePaletteInto(el('biome-palette'), false);
+  buildBiomePaletteInto(el('mobileBiomeBar'), true);
+  // Default active
+  const def1 = el('biome-palette').querySelector('[data-biome="forest"]');
+  if (def1) def1.classList.add('active');
+  const def2 = el('mobileBiomeBar').querySelector('[data-biome="forest"]');
+  if (def2) def2.classList.add('active');
+})();
+
+/* ============================================================
+   ЛЕГЕНДА
+   ============================================================ */
+(function buildLegend() {
+  const keys = ['deep','ocean','shallow','beach','desert','grass','forest','jungle','tundra','snow','mountain','peak','basalt'];
+  el('legend').innerHTML = keys.map(k => {
+    const c = BIOMES[k].c;
+    return `<div><i style="background:rgb(${c[0]},${c[1]},${c[2]})"></i>${BIOMES[k].n}</div>`;
+  }).join('');
+})();
+
+/* ============================================================
+   ГОРЯЧИЕ КЛАВИШИ
+   ============================================================ */
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape') {
+    if (armedDisaster) { clearArmedDisaster(); return; }
+    if (isMobile()) { closeDrawers(); return; }
+    if (tool !== 'view') {
+      if (tool === 'civ') onSelectionChanged(-1);
+      else setTool('view');
+    } else if (selectedCivId >= 0) onSelectionChanged(-1);
+  } else if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  else if (e.key === 'n' || e.key === 'N' || e.key === 'т' || e.key === 'Т') el('btn-step').click();
+  else if (e.key === 'v' || e.key === 'V' || e.key === 'м' || e.key === 'М') setTool('view');
+  else if (e.key === 'c' || e.key === 'C' || e.key === 'с' || e.key === 'С') { if (selectedCivId >= 0) setTool('civ'); }
+  else if (e.key === 'b' || e.key === 'B' || e.key === 'и' || e.key === 'И') setTool('biome');
+  else if (e.key === 'e' || e.key === 'E' || e.key === 'у' || e.key === 'У') setTool('erase');
+  else if (e.key === '+' || e.key === '=') zoomTo(view.zoom*1.35, 0.5, 0.5);
+  else if (e.key === '-' || e.key === '_') zoomTo(view.zoom/1.35, 0.5, 0.5);
+  else if (e.key === '0') { view.zoom = 1; view.cx = COLS/2; view.cy = ROWS/2; updateZoomUI(); }
+  else if (e.key === 'ArrowLeft')  { view.cx -= COLS/view.zoom*0.1; clampView(); }
+  else if (e.key === 'ArrowRight') { view.cx += COLS/view.zoom*0.1; clampView(); }
+  else if (e.key === 'ArrowUp')    { view.cy -= ROWS/view.zoom*0.1; clampView(); }
+  else if (e.key === 'ArrowDown')  { view.cy += ROWS/view.zoom*0.1; clampView(); }
+});
+
+/* ============================================================
+   ИГРОВОЙ ЦИКЛ
+   ============================================================ */
+let lastTs = 0, acc = 0;
+function loop(ts) {
+  requestAnimationFrame(loop);
+  if (!lastTs) lastTs = ts;
+  const dt = Math.min(0.1, (ts-lastTs)/1000);
+  lastTs = ts;
+  if (running) {
+    acc += dt*speed;
+    let steps = 0;
+    while (acc >= 1 && steps < 40) { acc -= 1; tick(); steps++; }
+  }
+  render(ts);
+  uiAcc += dt;
+  if (uiAcc > 0.15) { uiAcc = 0; updateUINumbers(); }
+}
+
+/* ============================================================
+   СТАРТ
+   ============================================================ */
+function newWorld() {
+  civs = []; activeDisasters = []; activeLava.clear();
+  year = 0; logEntries = [];
+  selectedCivId = -1; hoverCivId = -1;
+  view.cx = COLS/2; view.cy = ROWS/2; view.zoom = 1;
+  clearArmedDisaster();
+  setTool('view');
+  renderLog();
+  generate();
+  for (let i=0; i<DEFAULT_CIVS; i++) spawnRandomCiv();
+  addLog('🌍 Мир создан. Да начнётся история!');
+  addLog('💡 Выберите цивилизацию в списке и рисуйте её территорию. ➕ добавит новую, ✕ удалит.');
+  rebuildCivList();
+  rebuildDetails();
+  rebuildPaintBanner();
+  updateZoomUI();
+  updateUINumbers();
+  if (isMobile()) closeDrawers();
+}
+
+window.addEventListener('resize', () => { resizeCanvas(); syncToolButtons(); });
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => { resizeCanvas(); syncToolButtons(); }, 200);
+});
+
+// Также пересобираем при изменении медиа-запроса
+const mqMobile = window.matchMedia('(max-width: 820px)');
+mqMobile.addEventListener('change', () => { syncToolButtons(); resizeCanvas(); });
+
+resizeCanvas();
+newWorld();
+
+requestAnimationFrame(() => {
+  resizeCanvas();
+  requestAnimationFrame(() => {
+    resizeCanvas();
+    updateUINumbers();
+    requestAnimationFrame(loop);
+  });
+});
+setTimeout(() => { resizeCanvas(); markTerrainFull(); }, 300);
+</script>
+</body>
+</html>
